@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>51746516421-q816vlgur2vsfs1hdicap87467aed9en.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.51746516421-q816vlgur2vsfs1hdicap87467aed9en</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>51746516421-1huqtkqb17886cqk92ftdsiub6ortml6.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBwYuIucLF8TsHUwQ9WjVY9juDmP1AbJsM</string>
+	<key>GCM_SENDER_ID</key>
+	<string>51746516421</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.primeTaxiFlutterUiKit</string>
+	<key>PROJECT_ID</key>
+	<string>mile-cab-app</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mile-cab-app.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:51746516421:ios:998cead7dcf5dc3446afac</string>
+</dict>
+</plist>
