@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:prime_taxi_flutter_ui_kit/common_widgets/common_button.dart';
@@ -16,13 +17,115 @@ import 'package:prime_taxi_flutter_ui_kit/controllers/create_profile_controller.
 import 'package:prime_taxi_flutter_ui_kit/controllers/home_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/terms_of_service/terms_of_service.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// ignore: must_be_immutable
 class CreateProfileScreen extends StatelessWidget {
   CreateProfileScreen({super.key});
-  final HomeController homeController=Get.put(HomeController());
+  final HomeController homeController = Get.put(HomeController());
   final CreateProfileController createProfileController =
       Get.put(CreateProfileController());
-  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController enterCode = TextEditingController();
+  final TextEditingController enterEmail = TextEditingController();
+
+  Future<String> generatePartnerCode() async {
+    try {
+      // Get the current day and month
+      DateTime now = DateTime.now();
+      String day = now.day.toString().padLeft(2, '0');
+      String month = now.month.toString().padLeft(2, '0');
+
+      // Get the total number of riders from Firestore
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('riders').get();
+      int totalRiders = querySnapshot.docs.length;
+
+      // Concatenate the total number of riders with day and month
+      String code = 'MTL${totalRiders + 1}$day$month';
+
+      return code;
+    } catch (e) {
+      debugPrint('Error generating partner code: $e');
+      return ''; // Return empty string in case of error
+    }
+  }
+
+  Future<String?> createUserWithEmailAndPassword(String email, String password,
+      String otpCode, String referralCode) async {
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      String uid = userCredential.user!.uid; // Get the UID of the user
+      debugPrint('User created successfully: $uid');
+      return uid; // Return the UID
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        debugPrint('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        debugPrint('The account already exists for that email.');
+      }
+      return null; // Return null if an error occurs
+    } catch (e) {
+      debugPrint('Error creating user: $e');
+      return null; // Return null if an error occurs
+    }
+  }
+
+  // Function to create a document in Firestore
+  void createFirestoreDocument(String uid, String email, String otpCode,
+      String selectedGender, String referralCode) async {
+    try {
+      // Await the partner code generation
+      String partnerCode = await generatePartnerCode();
+
+      FirebaseFirestore.instance.collection('riders').doc(uid).set({
+        'email': email,
+        'otpCode': otpCode,
+        'otpDate': generateServerTimestamp(),
+        'dateRegistered': generateServerTimestamp(),
+        'activeUser': true,
+        'authID': uid,
+        'gender': selectedGender,
+        'language': 'en',
+        'partnerCode': partnerCode, // Use the generated partner code
+        'phone': '',
+        'referralCode': referralCode,
+      });
+      debugPrint('Firestore document created successfully');
+    } catch (e) {
+      debugPrint('Error creating Firestore document: $e');
+    }
+  }
+
+  // Function to generate Firestore server timestamp
+  FieldValue generateServerTimestamp() {
+    return FieldValue.serverTimestamp();
+  }
+
+  // Selected Gender
+  String selectedGender = 'male';
+
+  // Function to generate a random password
+  String generatePassword(int length) {
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random.secure();
+    return List.generate(length, (index) => chars[random.nextInt(chars.length)])
+        .join('');
+  }
+
+  // Function to generate a 5-digit OTP
+  String generateOTP() {
+    const chars = '0123456789';
+    final random = Random.secure();
+    return List.generate(5, (index) => chars[random.nextInt(chars.length)])
+        .join('');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +206,8 @@ class CreateProfileScreen extends StatelessWidget {
                                         prefixIcon: const SizedBox(
                                           width: AppSize.size16,
                                         ),
-                                        prefixIconConstraints: const BoxConstraints(
+                                        prefixIconConstraints:
+                                            const BoxConstraints(
                                           minWidth: AppSize.size16,
                                         ),
                                         hintColor: AppColors.smallTextColor,
@@ -115,7 +219,43 @@ class CreateProfileScreen extends StatelessWidget {
                                         colorText: AppColors.blackTextColor,
                                         textInputAction: TextInputAction.done,
                                         fillColor: AppColors.backGroundColor,
-                                        controller: phoneController,
+                                        controller: nameController,
+                                      ),
+                                    ),
+                                  ),
+                                  CommonHeightSizedBox(
+                                      height: height / AppSize.size35),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSize.size20),
+                                    child: Container(
+                                      height: AppSize.size54,
+                                      decoration: BoxDecoration(boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.shadow,
+                                          blurRadius: AppSize.size66,
+                                          spreadRadius: AppSize.size0,
+                                        )
+                                      ]),
+                                      child: CustomTextField(
+                                        prefixIcon: const SizedBox(
+                                          width: AppSize.size16,
+                                        ),
+                                        prefixIconConstraints:
+                                            const BoxConstraints(
+                                          minWidth: AppSize.size16,
+                                        ),
+                                        hintColor: AppColors.smallTextColor,
+                                        fontFamily: FontFamily.latoRegular,
+                                        fontSize: AppSize.size14,
+                                        hintText: AppStrings.enterEmail,
+                                        fillFontFamily: FontFamily.latoSemiBold,
+                                        fillFontSize: AppSize.size14,
+                                        colorText: AppColors.blackTextColor,
+                                        textInputAction: TextInputAction.done,
+                                        keyboardType: TextInputType.text,
+                                        fillColor: AppColors.backGroundColor,
+                                        controller: enterEmail,
                                       ),
                                     ),
                                   ),
@@ -125,8 +265,8 @@ class CreateProfileScreen extends StatelessWidget {
                           ),
                           CommonHeightSizedBox(height: height / AppSize.size60),
                           const Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: AppSize.size20),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: AppSize.size20),
                             child: Text(
                               AppStrings.gender,
                               textAlign: TextAlign.center,
@@ -167,54 +307,16 @@ class CreateProfileScreen extends StatelessWidget {
                                 fillFontSize: AppSize.size14,
                                 colorText: AppColors.blackTextColor,
                                 textInputAction: TextInputAction.done,
-                                keyboardType: TextInputType.number,
+                                keyboardType: TextInputType.text,
                                 fillColor: AppColors.backGroundColor,
                                 controller: enterCode,
                               ),
                             ),
                           ),
                           CommonHeightSizedBox(height: height / AppSize.size50),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: AppSize.size20),
-                            child: Row(
-                              children: [
-                                Obx(
-                                  () => Container(
-                                    height: AppSize.size16,
-                                    width: AppSize.size16,
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(AppSize.size4)),
-                                    child: Checkbox(
-                                      value: createProfileController.check.value,
-                                      onChanged: (value) {
-                                        createProfileController.check.toggle();
-                                      },
-                                      checkColor: AppColors.backGroundColor,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(AppSize.size4)),
-                                      activeColor: AppColors.primaryColor,
-                                    ),
-                                  ),
-                                ),
-                                const CommonWidthSizedBox(width: AppSize.size10),
-                                const Text(
-                                  AppStrings.receiveImportantUpdates,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: AppColors.blackTextColor,
-                                    fontFamily: FontFamily.latoMedium,
-                                    fontSize: AppSize.size14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height / AppSize.size15,
+                            height: MediaQuery.of(context).size.height /
+                                AppSize.size15,
                           ),
                           Padding(
                             padding: const EdgeInsets.only(
@@ -222,8 +324,31 @@ class CreateProfileScreen extends StatelessWidget {
                                 right: AppSize.size20,
                                 bottom: AppSize.size20),
                             child: ButtonCommon(
-                              onTap: () {
-                                Get.to(() => TermsOfService());
+                              onTap: () async {
+                                // Generate new OTP
+                                String newOTP = generateOTP();
+                                // Get email and password from text controllers
+                                String email = enterEmail.text;
+                                String referralCode = enterCode.text;
+                                String password = generatePassword(8);
+
+                                // Create user with email, password, and OTP
+                                String? uid =
+                                    await createUserWithEmailAndPassword(
+                                        email, password, newOTP, referralCode);
+
+                                // Check if user creation was successful
+                                if (uid != null) {
+                                  // Create Firestore document with user data
+                                  createFirestoreDocument(uid, email, newOTP,
+                                      selectedGender, referralCode);
+
+                                  // Navigate to TermsOfService screen
+                                  Get.to(() => TermsOfService());
+                                } else {
+                                  // Handle error if user creation failed
+                                  // Display error message or take appropriate action
+                                }
                               },
                               text: AppStrings.proceed,
                               height: AppSize.size54,
@@ -250,6 +375,7 @@ class CreateProfileScreen extends StatelessWidget {
             () => Expanded(
               child: GestureDetector(
                 onTap: () {
+                  selectedGender = 'male';
                   createProfileController.male.value = true;
                   createProfileController.female.value = false;
                   createProfileController.other.value = false;
@@ -293,6 +419,7 @@ class CreateProfileScreen extends StatelessWidget {
             () => Expanded(
                 child: GestureDetector(
                     onTap: () {
+                      selectedGender = 'female';
                       createProfileController.male.value = false;
                       createProfileController.female.value = true;
                       createProfileController.other.value = false;
@@ -333,6 +460,7 @@ class CreateProfileScreen extends StatelessWidget {
           Obx(() => Expanded(
                 child: GestureDetector(
                   onTap: () {
+                    selectedGender = 'other';
                     createProfileController.male.value = false;
                     createProfileController.female.value = false;
                     createProfileController.other.value = true;

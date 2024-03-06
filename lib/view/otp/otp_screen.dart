@@ -68,13 +68,15 @@ class OtpScreen extends StatelessWidget {
                 ),
                 const CommonHeightSizedBox(height: AppSize.size68),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSize.size20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSize.size20),
                   child: pinPutField(context),
                 ),
                 const CommonHeightSizedBox(height: AppSize.size24),
                 Obx(() => otpController.isTimerExpired.value
                     ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSize.size20),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSize.size20),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -104,8 +106,8 @@ class OtpScreen extends StatelessWidget {
                         ),
                       )
                     : Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: AppSize.size20),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSize.size20),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -115,8 +117,9 @@ class OtpScreen extends StatelessWidget {
                                   fontFamily: FontFamily.latoRegular,
                                   fontSize: AppSize.size12,
                                   color: AppColors.smallTextColor),
-                            ),  Text(
-                              "${ otpController.timer.value}s",
+                            ),
+                            Text(
+                              "${otpController.timer.value}s",
                               style: const TextStyle(
                                   fontFamily: FontFamily.latoRegular,
                                   fontSize: AppSize.size12,
@@ -135,6 +138,7 @@ class OtpScreen extends StatelessWidget {
 
   Widget pinPutField(context) {
     return Pinput(
+      length: 5,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       controller: otpController.pinPutController,
       keyboardType: TextInputType.number,
@@ -157,14 +161,14 @@ class OtpScreen extends StatelessWidget {
               spreadRadius: AppSize.size0,
             )
           ],
-          borderRadius: BorderRadius.circular(AppSize.size10
-          ),
+          borderRadius: BorderRadius.circular(AppSize.size10),
           border: Border.all(color: AppColors.borderColor),
         ),
       ),
       onChanged: (value) {
         otpController.otp.value = value;
-        if (value.length == 4) {
+        if (value.length == 5) {
+          debugPrint("Length Met");
           Get.to(() => const LocationPermission());
         }
       },
@@ -192,9 +196,9 @@ class OtpScreen extends StatelessWidget {
               alignment: Alignment.topLeft,
               child: GestureDetector(
                   onTap: () {
-                   Get.back();
-                   otpController.resendOTP();
-                   otpController.isTimerExpired.value = false;
+                    Get.back();
+                    otpController.resendOTP();
+                    otpController.isTimerExpired.value = false;
                   },
                   child:
                       Image.asset(AppIcons.arrowBack, height: AppSize.size20)),

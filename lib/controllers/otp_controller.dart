@@ -28,7 +28,7 @@ class OtpController extends GetxController {
 
         isTimerExpired.value = true;
       } else {
-        int seconds = (AppSize.time60 - timer.tick) % AppSize.time60;
+        int seconds = (AppSize.time200 - timer.tick) % AppSize.time200;
         this.timer.value = seconds.toString().padLeft(AppSize.two);
       }
     });

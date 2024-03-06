@@ -15,16 +15,32 @@ import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/get_started_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/otp/otp_screen.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 class GetStartedScreen extends StatelessWidget {
   GetStartedScreen({super.key});
 
   final GetStartedController getStartedController =
       Get.put(GetStartedController());
 
+  void _printCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      String uid = user.uid;
+      String email = user.email ?? 'Email not available';
+      debugPrint('Current User UID: $uid');
+      debugPrint('Current User Email: $email');
+    } else {
+      debugPrint('No user signed in');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+
+    _printCurrentUser();
 
     return Padding(
       padding:
