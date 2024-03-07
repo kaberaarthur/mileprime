@@ -7,6 +7,8 @@ import 'package:prime_taxi_flutter_ui_kit/config/app_strings.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/welcome/welcome_screen.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 logoutBottomSheet(BuildContext context) {
   return showModalBottomSheet(
     backgroundColor: Colors.transparent,
@@ -108,8 +110,15 @@ logoutBottomSheet(BuildContext context) {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () {
-                      Get.offAll(() => const WelcomeScreen());
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      FirebaseAuth.instance
+                          .authStateChanges()
+                          .listen((User? user) {
+                        if (user == null) {
+                          Get.offAll(() => const WelcomeScreen());
+                        }
+                      });
                     },
                     child: Container(
                       height: AppSize.size54,

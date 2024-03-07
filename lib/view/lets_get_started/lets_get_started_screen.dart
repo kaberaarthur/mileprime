@@ -16,9 +16,14 @@ import 'package:prime_taxi_flutter_ui_kit/controllers/get_started_controller.dar
 import 'package:prime_taxi_flutter_ui_kit/view/otp/otp_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'firestore_service.dart';
 
 class GetStartedScreen extends StatelessWidget {
   GetStartedScreen({super.key});
+
+  static String? errorMessage;
 
   final GetStartedController getStartedController =
       Get.put(GetStartedController());
@@ -63,10 +68,49 @@ class GetStartedScreen extends StatelessWidget {
                   right: AppSize.size20,
                   bottom: AppSize.size30),
               child: Obx(() => ButtonCommon(
-                    onTap: () {
-                      getStartedController.isValidPhoneNumber.value
-                          ? Get.to(() => OtpScreen())
-                          : null;
+                    onTap: () async {
+                      // Check if the phone number is valid
+                      if (getStartedController.isValidPhoneNumber.value) {
+                        // Retrieve the phone number entered
+                        String phoneNumber =
+                            getStartedController.phoneController.text;
+
+                        // Call the function to check the riders collection for the phone number
+                        FirestoreService firestoreService = FirestoreService();
+                        String? result = await firestoreService
+                            .checkRidersCollectionForPhoneNumber(phoneNumber);
+
+                        // Check if the result is not null
+                        if (result != null) {
+                          // Check if the result is an OTP code
+                          if (!result.startsWith('Error')) {
+                            // Print the OTP
+                            debugPrint('OTP received: $result');
+                            // Clear Error Message
+                            GetStartedScreen.errorMessage = '';
+                            // Navigate to the OTP screen
+                            Get.to(() => OtpScreen(), arguments: {
+                              'phoneNumber': '+254$phoneNumber',
+                              'otp': result
+                            });
+                          } else {
+                            // Print the error
+                            debugPrint(' - $result');
+                            // Update the errorMessage variable
+                            GetStartedScreen.errorMessage = result;
+                            // Trigger a rebuild of the widget tree
+                            setState(() {});
+                          }
+                        } else {
+                          // Print the error
+                          debugPrint('Error occurred while fetching OTP');
+                          // Update the errorMessage variable
+                          GetStartedScreen.errorMessage =
+                              'Error occurred while fetching OTP';
+                          // Trigger a rebuild of the widget tree
+                          setState(() {});
+                        }
+                      }
                     },
                     text: AppStrings.proceed,
                     height: AppSize.size54,
@@ -101,6 +145,20 @@ class GetStartedScreen extends StatelessWidget {
                       AppStrings.thisNumber,
                       style: TextStyle(
                         color: AppColors.smallTextColor,
+                        fontFamily: FontFamily.latoRegular,
+                        fontSize: AppSize.size12,
+                      ),
+                    ),
+                  ),
+
+                  // Show Error Message
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        left: AppSize.size20, right: AppSize.size50),
+                    child: Text(
+                      GetStartedScreen.errorMessage ?? '',
+                      style: const TextStyle(
+                        color: AppColors.redColor,
                         fontFamily: FontFamily.latoRegular,
                         fontSize: AppSize.size12,
                       ),
@@ -301,4 +359,6 @@ class GetStartedScreen extends StatelessWidget {
       ),
     );
   }
+
+  void setState(Null Function() param0) {}
 }

@@ -11,24 +11,118 @@ import 'package:prime_taxi_flutter_ui_kit/config/app_strings.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/get_started_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/otp_controller.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/location_permission/location_permission_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/home/home_screen.dart';
 
-class OtpScreen extends StatelessWidget {
-  OtpScreen({super.key});
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+class OtpScreen extends StatefulWidget {
+  OtpScreen({Key? key}) : super(key: key);
+
+  @override
+  _OtpScreenState createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
   final OtpController otpController = Get.put(OtpController());
   final GetStartedController getStartedController =
       Get.put(GetStartedController());
+
+  late String phoneNumber;
+  late String otp;
+
+  String? riderEmail;
+  String? riderPassword;
+
+  void debugPrintEmail(String? email) {
+    if (email != null) {
+      debugPrint('Rider email: $email');
+    } else {
+      debugPrint('Email not found or null');
+    }
+  }
+
+  void debugPrintPassword(String? password) {
+    if (password != null) {
+      debugPrint('Rider password: $password');
+    } else {
+      debugPrint('Email not found or null');
+    }
+  }
+
+  Future<void> signInWithEmailAndPassword(
+      String riderEmail, String riderPassword) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: riderEmail,
+        password: riderPassword,
+      );
+      debugPrint('Sign in successful');
+      // You can add any additional logic here after successful sign-in
+    } catch (e) {
+      debugPrint('Error signing in: $e');
+      // Handle error here
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final Map<String, dynamic>? args = Get.arguments;
+    if (args != null) {
+      phoneNumber = args['phoneNumber'] ?? '';
+      otp = args['otp'] ?? '';
+    } else {
+      phoneNumber = '';
+      otp = '';
+    }
+    debugPrint('Phone Number: $phoneNumber');
+    debugPrint('OTP: $otp');
+
+    if (phoneNumber.isNotEmpty) {
+      fetchRiderDocument();
+    }
+  }
+
+  Future<void> fetchRiderDocument() async {
+    try {
+      final CollectionReference ridersCollection =
+          FirebaseFirestore.instance.collection('riders');
+      final QuerySnapshot snapshot =
+          await ridersCollection.where('phone', isEqualTo: phoneNumber).get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final DocumentSnapshot document = snapshot.docs.first;
+        final Map<String, dynamic>? data =
+            document.data() as Map<String, dynamic>?;
+
+        // Get Rider Email
+        if (data != null && data.containsKey('email')) {
+          debugPrint('Rider email: ${data['email']}');
+          riderEmail = data['email'] as String;
+        } else {
+          debugPrint('Email not found in rider document');
+        }
+
+        // Get Rider Password
+        if (data != null && data.containsKey('password')) {
+          debugPrint('Rider password: ${data['password']}');
+          riderPassword = data['password'] as String;
+        } else {
+          debugPrint('Email not found in rider document');
+        }
+      } else {
+        debugPrint('No document found for the provided phone number');
+      }
+    } catch (e) {
+      debugPrint('Error fetching rider document: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
-    // SystemChrome.setSystemUIOverlayStyle(
-    //   const SystemUiOverlayStyle(
-    //     statusBarColor: Colors.transparent,
-    //   ),
-    // );
 
     return Center(
       child: Container(
@@ -136,7 +230,7 @@ class OtpScreen extends StatelessWidget {
     );
   }
 
-  Widget pinPutField(context) {
+  Widget pinPutField(BuildContext context) {
     return Pinput(
       length: 5,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -167,9 +261,12 @@ class OtpScreen extends StatelessWidget {
       ),
       onChanged: (value) {
         otpController.otp.value = value;
-        if (value.length == 5) {
-          debugPrint("Length Met");
-          Get.to(() => const LocationPermission());
+        if (value.length == 5 && value == otp) {
+          /*debugPrint("Length Met and OTP matched with phone number");
+          debugPrintPassword(riderPassword);
+          debugPrintEmail(riderEmail);*/
+          signInWithEmailAndPassword(riderEmail!, riderPassword!);
+          Get.to(() => HomeScreen());
         }
       },
     );
