@@ -137,7 +137,20 @@ class GetStartedScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+
                   const CommonHeightSizedBox(height: AppSize.size12),
+                  const Padding(
+                    padding: EdgeInsets.only(
+                        left: AppSize.size20, right: AppSize.size50),
+                    child: Text(
+                      AppStrings.thisNumber,
+                      style: TextStyle(
+                        color: AppColors.smallTextColor,
+                        fontFamily: FontFamily.latoRegular,
+                        fontSize: AppSize.size12,
+                      ),
+                    ),
+                  ),
                   const Padding(
                     padding: EdgeInsets.only(
                         left: AppSize.size20, right: AppSize.size50),
@@ -165,6 +178,7 @@ class GetStartedScreen extends StatelessWidget {
                     ),
                   ),
                   const CommonHeightSizedBox(height: AppSize.size40),
+                  // Phone Input Start
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: AppSize.size20),
@@ -300,6 +314,8 @@ class GetStartedScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Phone Input End
+
                   const CommonHeightSizedBox(height: AppSize.size60),
                 ],
               ),

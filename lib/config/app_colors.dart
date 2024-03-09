@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const Color primaryColor = Color(0xffFEB914);
+  static const Color lightWarningColor = Color.fromARGB(255, 254, 67, 20);
   static const Color backGroundColor = Color(0xffFFFFFF);
   static const Color blackTextColor = Color(0xff1F1E1D);
   static const Color smallTextColor = Color(0xff828282);

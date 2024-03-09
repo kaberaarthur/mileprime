@@ -16,7 +16,12 @@ class AppSize {
   static const double zeroAndFive = 0.5;
   static const double zeroAndThirtyTwo = 0.32;
 
+  static const double size0_60 = 0.60;
   static const double size0_65 = 0.65;
+  static const double size0_50 = 0.50;
+  static const double size0_40 = 0.40;
+  static const double size0_45 = 0.45;
+  static const double size0_80 = 0.80;
   static const double size1 = 1;
   static const double size1and2 = 1.2;
   static const double size1and4 = 1.4;
@@ -254,8 +259,8 @@ class AppSize {
   static const int time60 = 16;
   static const int time200 = 200;
   static const int time20000 = 20000;
-  static const double latitude = 21.2315;
-  static const double longitude = 72.8663;
+  static const double latitude = -1.215693;
+  static const double longitude = 36.775526;
   static const double longitude72 = 72.8688;
   static const double minus1 = -1;
 

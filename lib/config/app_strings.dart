@@ -7,6 +7,8 @@ class AppStrings {
   static const String indiaCode = '+91';
   static const String kenyaCode = '+254';
   static const String letsGetStarted = "Let’s get started";
+  static const String logIn = "Log In";
+  static const String register = "Register";
   static const String proceed = "Proceed";
   static const String terms = "1. Terms";
   static const String ar = "AR";
@@ -38,6 +40,8 @@ class AppStrings {
   static const String createYourProfile = "Create your profile";
   static const String enterFullName = "Enter full name";
   static const String pleaseCreateYourAccount = "Please create your account.";
+  static const String youMustEnter =
+      "You must enter Phone, Email and Name fields to proceed";
   static const String zero = "0";
   static const String sixteen = "16";
   static const String notNow = "Not now";

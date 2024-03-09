@@ -109,7 +109,7 @@ class _OtpScreenState extends State<OtpScreen> {
           debugPrint('Rider password: ${data['password']}');
           riderPassword = data['password'] as String;
         } else {
-          debugPrint('Email not found in rider document');
+          debugPrint('Password not found in rider document');
         }
       } else {
         debugPrint('No document found for the provided phone number');

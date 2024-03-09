@@ -10,6 +10,7 @@ import 'package:prime_taxi_flutter_ui_kit/config/app_size.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/app_strings.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/lets_get_started/lets_get_started_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/create_profile/create_profile_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -34,7 +35,7 @@ class WelcomeScreen extends StatelessWidget {
           backgroundColor: AppColors.backGroundColor,
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.only(
-                bottom: AppSize.size30,
+                bottom: AppSize.size20,
                 right: AppSize.size20,
                 left: AppSize.size20),
             child: GestureDetector(
@@ -51,7 +52,7 @@ class WelcomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      AppStrings.letsGetStarted,
+                      AppStrings.logIn,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: AppColors.backGroundColor,
@@ -76,7 +77,7 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                height: height * AppSize.size0_65,
+                // height: height * AppSize.size0_50,
                 child: Column(
                   children: [
                     const CommonHeightSizedBox(height: AppSize.size20),
@@ -86,7 +87,7 @@ class WelcomeScreen extends StatelessWidget {
                       child: Center(
                         child: Image.asset(
                           AppIcons.splashLogo,
-                          height: AppSize.size100,
+                          height: AppSize.size82,
                         ),
                       ),
                     ),
@@ -97,22 +98,26 @@ class WelcomeScreen extends StatelessWidget {
                           height: height / AppSize.size2_5,
                           width: double.infinity,
                           decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                  image: AssetImage(AppImages.cloud),
-                                  fit: kIsWeb ? BoxFit.fill : BoxFit.contain)),
+                            image: DecorationImage(
+                              image: AssetImage(AppImages.cloud),
+                              fit: kIsWeb ? BoxFit.fill : BoxFit.contain,
+                            ),
+                          ),
                         ),
                         Container(
-                            margin: const EdgeInsets.only(
-                                left: AppSize.size25,
-                                right: AppSize.size25,
-                                top: AppSize.size120),
-                            height: height / AppSize.size4_5,
-                            decoration: const BoxDecoration(
-                                image: DecorationImage(
-                                    image: AssetImage(AppImages.carImage),
-                                    fit: kIsWeb
-                                        ? BoxFit.contain
-                                        : BoxFit.fill))),
+                          margin: const EdgeInsets.only(
+                            left: AppSize.size25,
+                            right: AppSize.size25,
+                            top: AppSize.size26,
+                          ),
+                          height: height / AppSize.size4_5,
+                          decoration: const BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(AppImages.carImage),
+                              fit: kIsWeb ? BoxFit.contain : BoxFit.fill,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -129,9 +134,10 @@ class WelcomeScreen extends StatelessWidget {
                             AppStrings.bookYourRide,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: AppColors.blackTextColor,
-                                fontFamily: FontFamily.latoBold,
-                                fontSize: AppSize.size28),
+                              color: AppColors.blackTextColor,
+                              fontFamily: FontFamily.latoBold,
+                              fontSize: AppSize.size28,
+                            ),
                           ),
                           CommonHeightSizedBox(height: AppSize.size12),
                           Padding(
@@ -141,9 +147,10 @@ class WelcomeScreen extends StatelessWidget {
                               AppStrings.getRide,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: AppColors.smallTextColor,
-                                  fontFamily: FontFamily.latoRegular,
-                                  fontSize: AppSize.size14),
+                                color: AppColors.smallTextColor,
+                                fontFamily: FontFamily.latoRegular,
+                                fontSize: AppSize.size14,
+                              ),
                             ),
                           ),
                         ],
@@ -151,7 +158,48 @@ class WelcomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              )
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: AppSize.size10,
+                  right: AppSize.size20,
+                  left: AppSize.size20,
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    Get.to(() => CreateProfileScreen());
+                  },
+                  child: Container(
+                    height: AppSize.size54,
+                    decoration: BoxDecoration(
+                      color: AppColors.blackTextColor,
+                      borderRadius: BorderRadius.circular(AppSize.size10),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            AppStrings.register,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.backGroundColor,
+                              fontFamily: FontFamily.latoSemiBold,
+                              fontSize: AppSize.size16,
+                            ),
+                          ),
+                          const CommonWidthSizedBox(width: AppSize.size10),
+                          Image.asset(
+                            AppIcons.arrowRight,
+                            height: AppSize.size20,
+                            width: AppSize.size20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
