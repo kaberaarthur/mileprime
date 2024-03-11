@@ -11,10 +11,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/app_icons.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/app_size.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/app_strings.dart';
-import 'package:http/http.dart'as http;
+import 'package:http/http.dart' as http;
 
 import '../api/map_service.dart';
-
 
 class HomeController extends GetxController {
   RxSet<Marker> markers = <Marker>{}.obs;
@@ -22,7 +21,7 @@ class HomeController extends GetxController {
   RxBool like = false.obs;
   BitmapDescriptor? customMarker;
   final MarkerId markerId = const MarkerId(AppStrings.currentLocation);
-  LatLng?selectedDestination;
+  LatLng? selectedDestination;
   RxDouble height = 130.0.obs;
   GoogleMapController? myMapController;
   TextEditingController userLocationController = TextEditingController();
@@ -56,12 +55,10 @@ class HomeController extends GetxController {
       Marker(
         markerId: markerId,
         position: initialLocation.value,
-
         icon: customMarker ?? BitmapDescriptor.defaultMarker,
         infoWindow: const InfoWindow(title: AppStrings.yourCustomMarker),
         anchor: const Offset(0.8, 0.8),
       ),
-
     };
   }
 
@@ -77,8 +74,10 @@ class HomeController extends GetxController {
       AppStrings.currentLocation,
       '',
       '',
-      BitmapDescriptor.fromBytes(
-          await getBytesFromAsset(path: AppIcons.currentLocation, height: AppSize.size80.toInt(), width: AppSize.size80.toInt())),
+      BitmapDescriptor.fromBytes(await getBytesFromAsset(
+          path: AppIcons.currentLocation,
+          height: AppSize.size80.toInt(),
+          width: AppSize.size80.toInt())),
     );
     await _getCurrentAddress(latitude.value, longitude.value);
     initialLocation.value = LatLng(latitude.value, longitude.value);
@@ -106,20 +105,21 @@ class HomeController extends GetxController {
 
     return '';
   }
-  Future<Uint8List> getBytesFromAsset(
 
+  Future<Uint8List> getBytesFromAsset(
       {required String path, int? width, int? height}) async {
     ByteData data = await rootBundle.load(path);
     ui.Codec codec = await ui.instantiateImageCodec(
       data.buffer.asUint8List(),
       targetWidth: width ?? AppSize.size55.toInt(),
-      targetHeight: height ??  AppSize.size55.toInt(),
+      targetHeight: height ?? AppSize.size55.toInt(),
     );
     ui.FrameInfo fi = await codec.getNextFrame();
     return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
         .buffer
         .asUint8List();
   }
+
   setNearMarker(LatLng cord, String name, List types, String status,
       String address) async {
     final BitmapDescriptor markerIcon;
@@ -140,6 +140,7 @@ class HomeController extends GetxController {
     addCustomMarker(cord, name, name, address, markerIcon);
     update();
   }
+
   void addCustomMarker(LatLng latLng, String markerId, String placeName,
       String address, BitmapDescriptor icon) {
     markers.add(
@@ -175,19 +176,15 @@ class HomeController extends GetxController {
   }
 
   void onMarkerTap(LatLng latLng) {}
-  gMapsFunctionCall (context) {
+  gMapsFunctionCall(context) {
     Timer(const Duration(seconds: 2), () async {
-
-      var libraryPlaceResult = await MapServices()
-          .nearByPlaceDetailsAPI(const LatLng(21.2315, 72.8663),
-          16093.4.toInt(), "library");
-      var parkPlaceResult = await MapServices()
-          .nearByPlaceDetailsAPI(const LatLng(21.2315, 72.8663),
-          16093.4.toInt(), "park");
+      var libraryPlaceResult = await MapServices().nearByPlaceDetailsAPI(
+          const LatLng(21.2315, 72.8663), 16093.4.toInt(), "library");
+      var parkPlaceResult = await MapServices().nearByPlaceDetailsAPI(
+          const LatLng(21.2315, 72.8663), 16093.4.toInt(), "park");
 
       List<dynamic> placeWithinList =
-      (libraryPlaceResult['results'] +
-          parkPlaceResult['results']) as List;
+          (libraryPlaceResult['results'] + parkPlaceResult['results']) as List;
       // allMarkerList.clear();
       // allMarkerList.addAll(placeWithinList);
 
@@ -200,7 +197,6 @@ class HomeController extends GetxController {
             element['business_status'] ?? 'not available',
             element['vicinity']);
       }
-
     });
   }
 
@@ -210,14 +206,15 @@ class HomeController extends GetxController {
 
   void updateHeight(double delta) {
     if (delta > 0) {
-      height.value = AppSize.size130;
+      height.value = AppSize.size320;
     } else if (delta < 0) {
       height.value = AppSize.size320;
     }
   }
 
   void onTapDirection() {
-    myMapController?.animateCamera(CameraUpdate.newCameraPosition(const CameraPosition(
+    myMapController
+        ?.animateCamera(CameraUpdate.newCameraPosition(const CameraPosition(
       target: LatLng(21.2315, 72.8663),
       zoom: 17.0,
     )));
@@ -244,4 +241,3 @@ class HomeController extends GetxController {
     AppStrings.oakAvenue,
   ];
 }
-

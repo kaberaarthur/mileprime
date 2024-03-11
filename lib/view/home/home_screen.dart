@@ -13,6 +13,7 @@ import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/home_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/language_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/destination/destination_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/places_destination/places_destination_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/my_rides/my_rides_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/payments/payments_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/profile/profile_screen.dart';
@@ -20,6 +21,7 @@ import 'package:prime_taxi_flutter_ui_kit/view/safety/safety_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/save_locations/save_locations_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/settings/settings_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/widget/logout_bottom_sheet.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../common_widgets/common_text_feild.dart';
 
@@ -387,16 +389,16 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                       child: SingleChildScrollView(
-                        physics: homeController.height.value == AppSize.size130
+                        /*physics: homeController.height.value == AppSize.size130
                             ? const NeverScrollableScrollPhysics()
-                            : const ClampingScrollPhysics(),
+                            : const ClampingScrollPhysics(),*/
                         child: Column(
                           children: [
                             Image.asset(
                               AppIcons.bottomSheetIcon,
                               width: AppSize.size40,
                             ),
-                            Obx(
+                            /*Obx(
                               () => languageController.arb.value
                                   ? Container(
                                       height: AppSize.size82,
@@ -664,9 +666,9 @@ class HomeScreen extends StatelessWidget {
                                         },
                                       ),
                                     ),
-                            ),
+                            ),*/
                             Container(
-                              height: AppSize.size162,
+                              height: AppSize.size238,
                               margin: const EdgeInsets.only(
                                 top: AppSize.size16,
                               ),
@@ -693,8 +695,7 @@ class HomeScreen extends StatelessWidget {
                                       height: AppSize.size42,
                                       child: TextField(
                                         decoration: InputDecoration(
-                                          hintText:
-                                              AppStrings.searchDestination,
+                                          hintText: AppStrings.setOrigin,
                                           hintStyle: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontFamily: FontFamily.latoSemiBold,
@@ -754,10 +755,14 @@ class HomeScreen extends StatelessWidget {
                                           color: AppColors.blackTextColor,
                                           fontSize: AppSize.size14,
                                         ),
-                                        cursorColor: AppColors.blackTextColor,
-                                        readOnly: true,
+                                        cursorColor: const Color.fromARGB(
+                                            255, 177, 168, 168),
+                                        // readOnly: true,
                                         onTap: () {
-                                          Get.to(() => DestinationScreen());
+                                          Get.to(
+                                              () => PlacesDestinationScreen());
+                                          debugPrint(
+                                              "Clicked Select Destination");
                                         },
                                       ),
                                     ),

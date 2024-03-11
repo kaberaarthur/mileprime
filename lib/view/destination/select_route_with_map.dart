@@ -235,132 +235,134 @@ class SelectRouteWithMapScreen extends StatelessWidget {
               ),
             )),
         Padding(
-          padding: const EdgeInsets.only(
-            top: AppSize.size12,
-            left: AppSize.size20,
-            right: AppSize.size20,
-          ),
-          child: Obx(() => Stack(
-            alignment: languageController.arb.value
-                ? Alignment.topRight
-                : Alignment.topLeft,
-            children: [
-              Container(
-                // height: AppSize.size173,
-                decoration: BoxDecoration(
-                  color: AppColors.backGroundColor,
-                  border: Border.all(
-                    color:
-                    AppColors.smallTextColor.withOpacity(AppSize.opacity15),
-                    width: AppSize.size1,
-                  ),
-                  borderRadius: BorderRadius.circular(AppSize.size10),
-                ),
-                child: Obx(() => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    selectRouteWithMapController.routeListTiles[0],
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: AppSize.size30,
-                      ),
-                      child: DottedLine(
-                        direction: Axis.horizontal,
-                        alignment: WrapAlignment.center,
-                        lineLength:
-                        kIsWeb ? AppSize.size680 : AppSize.size255,
-                        lineThickness: AppSize.size1,
-                        dashLength: AppSize.size4,
-                        dashColor: AppColors.smallTextColor
-                            .withOpacity(AppSize.opacity20),
-                        dashRadius: AppSize.size0,
-                        dashGapLength: AppSize.size4,
-                        dashGapColor: Colors.transparent,
-                        dashGapRadius: AppSize.size0,
-                      ),
-                    ),
-                    selectRouteWithMapController.routeListTiles[1],
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: AppSize.size30,
-                      ),
-                      child: DottedLine(
-                        direction: Axis.horizontal,
-                        alignment: WrapAlignment.center,
-                        lineLength:
-                        kIsWeb ? AppSize.size680 : AppSize.size255,
-                        lineThickness: AppSize.size1,
-                        dashLength: AppSize.size4,
-                        dashColor: AppColors.smallTextColor
-                            .withOpacity(AppSize.opacity20),
-                        dashRadius: AppSize.size0,
-                        dashGapLength: AppSize.size4,
-                        dashGapColor: Colors.transparent,
-                        dashGapRadius: AppSize.size0,
-                      ),
-                    ),
-                    selectRouteWithMapController.routeListTiles[2],
-                  ],
-                )),
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  left: languageController.arb.value ? 0 : AppSize.size23,
-                  right: languageController.arb.value
-                      ? AppSize.size23
-                      : AppSize.size0,
-                  top: AppSize.size45,
-                ),
-                child: Container(
-                  width: AppSize.size1,
-                  height: AppSize.size46,
-                  color: AppColors.smallTextColor,
-                ),
-              ),
-              Padding(
-                padding:  EdgeInsets.only(
-                  left: languageController.arb.value ? 0 : AppSize.size23,
-                  right: languageController.arb.value
-                      ? AppSize.size23
-                      : AppSize.size0,
-                  top: AppSize.size110,
-                ),
-                child: Container(
-                  width: AppSize.size1,
-                  height: AppSize.size46,
-                  color: AppColors.smallTextColor,
-                ),
-              ),
-              Positioned(
-                bottom: AppSize.size55,
-                right:languageController.arb.value?null: AppSize.size16,left:languageController.arb.value? AppSize.size16:null ,
-                child: GestureDetector(
-                  onTap: () {
-                    selectRouteWithMapController.swapItems();
-                  },
-                  child: Container(
-                    width: AppSize.size22,
-                    height: AppSize.size22,
+            padding: const EdgeInsets.only(
+              top: AppSize.size12,
+              left: AppSize.size20,
+              right: AppSize.size20,
+            ),
+            child: Obx(
+              () => Stack(
+                alignment: languageController.arb.value
+                    ? Alignment.topRight
+                    : Alignment.topLeft,
+                children: [
+                  Container(
+                    // height: AppSize.size173,
                     decoration: BoxDecoration(
                       color: AppColors.backGroundColor,
                       border: Border.all(
                         color: AppColors.smallTextColor
-                            .withOpacity(AppSize.opacity10),
+                            .withOpacity(AppSize.opacity15),
+                        width: AppSize.size1,
                       ),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(AppSize.size10),
                     ),
-                    child: Center(
-                      child: Image.asset(
-                        AppIcons.swapIcon,
-                        width: AppSize.size14,
+                    child: Obx(() => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            selectRouteWithMapController.routeListTiles[0],
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: AppSize.size30,
+                              ),
+                              child: DottedLine(
+                                direction: Axis.horizontal,
+                                alignment: WrapAlignment.center,
+                                lineLength:
+                                    kIsWeb ? AppSize.size680 : AppSize.size255,
+                                lineThickness: AppSize.size1,
+                                dashLength: AppSize.size4,
+                                dashColor: AppColors.smallTextColor
+                                    .withOpacity(AppSize.opacity20),
+                                dashRadius: AppSize.size0,
+                                dashGapLength: AppSize.size4,
+                                dashGapColor: Colors.transparent,
+                                dashGapRadius: AppSize.size0,
+                              ),
+                            ),
+                            selectRouteWithMapController.routeListTiles[1],
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: AppSize.size30,
+                              ),
+                              child: DottedLine(
+                                direction: Axis.horizontal,
+                                alignment: WrapAlignment.center,
+                                lineLength:
+                                    kIsWeb ? AppSize.size680 : AppSize.size255,
+                                lineThickness: AppSize.size1,
+                                dashLength: AppSize.size4,
+                                dashColor: AppColors.smallTextColor
+                                    .withOpacity(AppSize.opacity20),
+                                dashRadius: AppSize.size0,
+                                dashGapLength: AppSize.size4,
+                                dashGapColor: Colors.transparent,
+                                dashGapRadius: AppSize.size0,
+                              ),
+                            ),
+                            selectRouteWithMapController.routeListTiles[2],
+                          ],
+                        )),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: languageController.arb.value ? 0 : AppSize.size23,
+                      right: languageController.arb.value
+                          ? AppSize.size23
+                          : AppSize.size0,
+                      top: AppSize.size45,
+                    ),
+                    child: Container(
+                      width: AppSize.size1,
+                      height: AppSize.size46,
+                      color: AppColors.smallTextColor,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: languageController.arb.value ? 0 : AppSize.size23,
+                      right: languageController.arb.value
+                          ? AppSize.size23
+                          : AppSize.size0,
+                      top: AppSize.size110,
+                    ),
+                    child: Container(
+                      width: AppSize.size1,
+                      height: AppSize.size46,
+                      color: AppColors.smallTextColor,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: AppSize.size55,
+                    right: languageController.arb.value ? null : AppSize.size16,
+                    left: languageController.arb.value ? AppSize.size16 : null,
+                    child: GestureDetector(
+                      onTap: () {
+                        selectRouteWithMapController.swapItems();
+                      },
+                      child: Container(
+                        width: AppSize.size22,
+                        height: AppSize.size22,
+                        decoration: BoxDecoration(
+                          color: AppColors.backGroundColor,
+                          border: Border.all(
+                            color: AppColors.smallTextColor
+                                .withOpacity(AppSize.opacity10),
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            AppIcons.swapIcon,
+                            width: AppSize.size14,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),)
-        ),
+            )),
       ],
     );
   }

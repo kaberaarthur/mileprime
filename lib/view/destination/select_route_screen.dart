@@ -304,7 +304,8 @@ class SelectRouteScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(right: AppSize.size4,left: AppSize.size4),
+                padding: const EdgeInsets.only(
+                    right: AppSize.size4, left: AppSize.size4),
                 child: Image.asset(
                   AppIcons.mapPointIcon,
                   width: AppSize.size14,

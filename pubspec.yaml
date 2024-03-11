@@ -17,8 +17,9 @@ dependencies:
   get: ^4.6.6
   fl_country_code_picker: ^0.1.9+1 
   pinput: ^4.0.0 
-  geolocator: ^11.0.0 
+  geolocator: ^9.0.0 
   http: ^1.2.0
+  uuid:
   google_maps_flutter: ^2.5.3 
   bottom_bar_with_sheet: ^2.4.0
   dotted_line: ^3.2.2
@@ -31,9 +32,11 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  geocoding: 
   firebase_core: ^2.25.5
   firebase_auth: ^4.17.6
   cloud_firestore: ^4.15.6
+  google_place_picker: ^1.0.2
 
 dev_dependencies:
   flutter_test:

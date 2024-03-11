@@ -66,6 +66,8 @@ class AppStrings {
   static const String rentals = "Rentals";
   static const String outstation = "Outstation";
   static const String searchDestination = "Search destination";
+  static const String setDestination = "Select Destination";
+  static const String setOrigin = "Select Pick Up Point";
   static const String rosewoodDrive =
       "222 Rosewood Drive, Roseland, Valley County R...";
   static const String birchRoad =

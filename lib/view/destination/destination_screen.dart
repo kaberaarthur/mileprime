@@ -15,13 +15,13 @@ import 'package:prime_taxi_flutter_ui_kit/controllers/language_controller.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/destination/select_route_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/destination/select_route_with_map.dart';
 
-
 class DestinationScreen extends StatelessWidget {
   DestinationScreen({Key? key}) : super(key: key);
 
-  DestinationController destinationController = Get.put(DestinationController());
+  DestinationController destinationController =
+      Get.put(DestinationController());
   HomeController homeController = Get.put(HomeController());
-final LanguageController languageController=Get.put(LanguageController());
+  final LanguageController languageController = Get.put(LanguageController());
   @override
   Widget build(BuildContext context) {
     languageController.loadSelectedLanguage();
@@ -33,7 +33,7 @@ final LanguageController languageController=Get.put(LanguageController());
           backgroundColor: AppColors.backGroundColor,
           appBar: _appBar(),
           body: _padding(),
-          bottomNavigationBar:_locateOnMapButton(),
+          bottomNavigationBar: _locateOnMapButton(),
         ),
       ),
     );
@@ -47,7 +47,7 @@ final LanguageController languageController=Get.put(LanguageController());
       automaticallyImplyLeading: false,
       title: Padding(
         padding:
-        const EdgeInsets.only(left: AppSize.size5, top: AppSize.size10),
+            const EdgeInsets.only(left: AppSize.size5, top: AppSize.size10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -62,7 +62,8 @@ final LanguageController languageController=Get.put(LanguageController());
               ),
             ),
             const Padding(
-              padding: EdgeInsets.only(left: AppSize.size12,right: AppSize.size12),
+              padding:
+                  EdgeInsets.only(left: AppSize.size12, right: AppSize.size12),
               child: Text(
                 AppStrings.destination,
                 style: TextStyle(
@@ -89,204 +90,219 @@ final LanguageController languageController=Get.put(LanguageController());
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Obx(() => Stack(
-            alignment: languageController.arb.value?Alignment.centerRight:Alignment.centerLeft,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.backGroundColor,
-                  border: Border.all(
-                    color:
-                    AppColors.smallTextColor.withOpacity(AppSize.opacity15),
-                    width: AppSize.size1and5,
+          Obx(
+            () => Stack(
+              alignment: languageController.arb.value
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.backGroundColor,
+                    border: Border.all(
+                      color: AppColors.smallTextColor
+                          .withOpacity(AppSize.opacity15),
+                      width: AppSize.size1and5,
+                    ),
+                    borderRadius: BorderRadius.circular(AppSize.size10),
+                    boxShadow: [
+                      BoxShadow(
+                        spreadRadius: AppSize.size2,
+                        color: AppColors.blackTextColor
+                            .withOpacity(AppSize.opacity10),
+                        blurRadius: AppSize.size24,
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(AppSize.size10),
-                  boxShadow: [
-                    BoxShadow(
-                      spreadRadius: AppSize.size2,
-                      color: AppColors.blackTextColor.withOpacity(AppSize.opacity10),
-                      blurRadius: AppSize.size24,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      dense: true,
-                      minLeadingWidth: AppSize.size16,
-                      leading: Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppSize.size7,
-                        ),
-                        child: Container(
-                          width: AppSize.size14,
-                          height: AppSize.size14,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.green,
-                              width: AppSize.size1,
-                            ),
-                            shape: BoxShape.circle,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        dense: true,
+                        minLeadingWidth: AppSize.size16,
+                        leading: Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppSize.size7,
                           ),
-                          child: Center(
-                            child: Container(
-                              width: AppSize.size8,
-                              height: AppSize.size8,
-                              decoration: const BoxDecoration(
+                          child: Container(
+                            width: AppSize.size14,
+                            height: AppSize.size14,
+                            decoration: BoxDecoration(
+                              border: Border.all(
                                 color: Colors.green,
-                                shape: BoxShape.circle,
+                                width: AppSize.size1,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: AppSize.size8,
+                                height: AppSize.size8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      title: TextField(
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.zero,
-                          hintText: AppStrings.yourLocation,
-                          hintStyle: TextStyle(
+                        title: TextField(
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.zero,
+                            hintText: AppStrings.yourLocation,
+                            hintStyle: TextStyle(
+                              fontSize: AppSize.size14,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: FontFamily.latoRegular,
+                              color: AppColors.smallTextColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          style: const TextStyle(
                             fontSize: AppSize.size14,
                             fontWeight: FontWeight.w400,
                             fontFamily: FontFamily.latoRegular,
-                            color: AppColors.smallTextColor,
+                            color: AppColors.blackTextColor,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
+                          cursorColor: AppColors.smallTextColor,
+                          controller: destinationController.locationController,
                         ),
-                        style: const TextStyle(
-                          fontSize: AppSize.size14,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: FontFamily.latoRegular,
-                          color: AppColors.blackTextColor,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        cursorColor: AppColors.smallTextColor,
-                        controller: destinationController.locationController,
                       ),
-                    ),
-                   Obx(() =>  Padding(
-                     padding:  EdgeInsets.only(
-                       left: languageController.arb.value?0:AppSize.size30,right: languageController.arb.value?AppSize.size30:0
-                     ),
-                     child: DottedLine(
-                       direction: Axis.horizontal,
-                       alignment: WrapAlignment.center,
-                       lineLength: kIsWeb ? AppSize.size680: AppSize.size255,
-                       lineThickness: AppSize.size1,
-                       dashLength: AppSize.size4,
-                       dashColor: AppColors.smallTextColor.withOpacity(AppSize.opacity20),
-                       dashRadius: AppSize.size0,
-                       dashGapLength: AppSize.size4,
-                       dashGapColor: Colors.transparent,
-                       dashGapRadius: AppSize.size0,
-                     ),
-                   ),),
-                    ListTile(
-                      dense: true,
-                      minLeadingWidth: AppSize.size16,
-                      leading: Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppSize.size6,
-                        ),
-                        child: Container(
-                          width: AppSize.size14,
-                          height: AppSize.size14,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.yellow,
-                              width: AppSize.size1,
-                            ),
-                            shape: BoxShape.circle,
+                      Obx(
+                        () => Padding(
+                          padding: EdgeInsets.only(
+                              left: languageController.arb.value
+                                  ? 0
+                                  : AppSize.size30,
+                              right: languageController.arb.value
+                                  ? AppSize.size30
+                                  : 0),
+                          child: DottedLine(
+                            direction: Axis.horizontal,
+                            alignment: WrapAlignment.center,
+                            lineLength:
+                                kIsWeb ? AppSize.size680 : AppSize.size255,
+                            lineThickness: AppSize.size1,
+                            dashLength: AppSize.size4,
+                            dashColor: AppColors.smallTextColor
+                                .withOpacity(AppSize.opacity20),
+                            dashRadius: AppSize.size0,
+                            dashGapLength: AppSize.size4,
+                            dashGapColor: Colors.transparent,
+                            dashGapRadius: AppSize.size0,
                           ),
-                          child: Center(
-                            child: Container(
-                              width: AppSize.size8,
-                              height: AppSize.size8,
-                              decoration: const BoxDecoration(
+                        ),
+                      ),
+                      ListTile(
+                        dense: true,
+                        minLeadingWidth: AppSize.size16,
+                        leading: Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppSize.size6,
+                          ),
+                          child: Container(
+                            width: AppSize.size14,
+                            height: AppSize.size14,
+                            decoration: BoxDecoration(
+                              border: Border.all(
                                 color: Colors.yellow,
-                                shape: BoxShape.circle,
+                                width: AppSize.size1,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: AppSize.size8,
+                                height: AppSize.size8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.yellow,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        title: TextField(
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.zero,
+                            hintText: AppStrings.enterDestination,
+                            hintStyle: TextStyle(
+                              fontSize: AppSize.size14,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: FontFamily.latoRegular,
+                              color: AppColors.smallTextColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: AppSize.size14,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: FontFamily.latoRegular,
+                            color: AppColors.blackTextColor,
+                          ),
+                          cursorColor: AppColors.smallTextColor,
+                          controller:
+                              destinationController.destinationController,
+                        ),
+                        trailing: GestureDetector(
+                          onTap: () {
+                            Get.to(() => SelectRouteScreen());
+                          },
+                          child: Container(
+                            width: AppSize.size22,
+                            height: AppSize.size22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.backGroundColor,
+                              border: Border.all(
+                                color: AppColors.smallTextColor
+                                    .withOpacity(AppSize.opacity10),
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: AppSize.size16,
+                                color: AppColors.blackTextColor,
                               ),
                             ),
                           ),
                         ),
                       ),
-                      title: TextField(
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.zero,
-                          hintText: AppStrings.enterDestination,
-                          hintStyle: TextStyle(
-                            fontSize: AppSize.size14,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: FontFamily.latoRegular,
-                            color: AppColors.smallTextColor,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: const TextStyle(
-                          fontSize: AppSize.size14,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: FontFamily.latoRegular,
-                          color: AppColors.blackTextColor,
-                        ),
-                        cursorColor: AppColors.smallTextColor,
-                        controller: destinationController.destinationController,
-                      ),
-                      trailing: GestureDetector(
-                        onTap: () {
-                          Get.to(() => SelectRouteScreen());
-                        },
-                        child: Container(
-                          width: AppSize.size22,
-                          height: AppSize.size22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.backGroundColor,
-                            border: Border.all(
-                              color: AppColors.smallTextColor.withOpacity(AppSize.opacity10),
-                            ),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.add_rounded,
-                              size: AppSize.size16,
-                              color: AppColors.blackTextColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding:  EdgeInsets.only(
-                  left: languageController.arb.value?0:AppSize.size23,
-                  right:languageController.arb.value?AppSize.size23:0 ,
-                  top: AppSize.size3,
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: languageController.arb.value ? 0 : AppSize.size23,
+                    right: languageController.arb.value ? AppSize.size23 : 0,
+                    top: AppSize.size3,
+                  ),
+                  child: Container(
+                    width: 1,
+                    height: AppSize.size39,
+                    color: AppColors.smallTextColor,
+                  ),
                 ),
-                child: Container(
-                  width: 1,
-                  height: AppSize.size39,
-                  color: AppColors.smallTextColor,
-                ),
-              ),
-            ],
-          ),),
+              ],
+            ),
+          ),
           const Padding(
             padding: EdgeInsets.only(
               top: AppSize.size32,
@@ -317,16 +333,22 @@ final LanguageController languageController=Get.put(LanguageController());
                   visualDensity: const VisualDensity(vertical: AppSize.minus1),
                   title: Row(
                     children: [
-                   Obx(() =>    Padding(
-                     padding:  EdgeInsets.only(
-                       right: languageController.arb.value?0:AppSize.size6,left: languageController.arb.value?AppSize.size6:0
-                     ),
-                     child: Image.asset(
-                       AppIcons.mapIcon,
-                       color: AppColors.smallTextColor,
-                       width: AppSize.size14,
-                     ),
-                   ),),
+                      Obx(
+                        () => Padding(
+                          padding: EdgeInsets.only(
+                              right: languageController.arb.value
+                                  ? 0
+                                  : AppSize.size6,
+                              left: languageController.arb.value
+                                  ? AppSize.size6
+                                  : 0),
+                          child: Image.asset(
+                            AppIcons.mapIcon,
+                            color: AppColors.smallTextColor,
+                            width: AppSize.size14,
+                          ),
+                        ),
+                      ),
                       Text(
                         destinationController.destinationPlace[index],
                         style: const TextStyle(
@@ -371,11 +393,8 @@ final LanguageController languageController=Get.put(LanguageController());
         bottom: AppSize.size20,
       ),
       child: GestureDetector(
-        onTap: ()   {
-
+        onTap: () {
           Get.to(() => SelectRouteWithMapScreen());
-
-
         },
         child: Container(
           height: AppSize.size46,
@@ -398,7 +417,8 @@ final LanguageController languageController=Get.put(LanguageController());
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(right: AppSize.size4,left:AppSize.size4 ),
+                padding: const EdgeInsets.only(
+                    right: AppSize.size4, left: AppSize.size4),
                 child: Image.asset(
                   AppIcons.mapPointIcon,
                   width: AppSize.size14,
@@ -419,5 +439,4 @@ final LanguageController languageController=Get.put(LanguageController());
       ),
     );
   }
-
 }
