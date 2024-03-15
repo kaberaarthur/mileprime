@@ -102,6 +102,7 @@ class _PlacesDestinationScreenState extends State<PlacesDestinationScreen> {
         double lng = data['results'][0]['geometry']['location']['lng'];
 
         _updateMyDestination(placeDescription, lat, lng);
+        setState(() {});
 
         // Return the latitude and longitude as a map
         return {
@@ -192,10 +193,18 @@ class _PlacesDestinationScreenState extends State<PlacesDestinationScreen> {
             padding: EdgeInsets.symmetric(horizontal: 20.0),
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _selectedDestination.isEmpty
+              onPressed: _myDestination.isEmpty
                   ? null // Disable button if _selectedDestination is empty
                   : () {
-                      Get.to(() => PlacesOriginScreen());
+                      /*
+                      debugPrint('################################');
+                      debugPrint('My Destination: $_myDestination');
+                      debugPrint('################################');
+                      */
+                      Get.to(
+                        () => PlacesOriginScreen(),
+                        arguments: {'_myDestination': _myDestination},
+                      );
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _myDestination.isEmpty

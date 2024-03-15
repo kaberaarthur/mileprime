@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -19,17 +20,31 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
   String _sessionToken = '1234567890';
   String _currentLocation = ''; // Variable to store current location
   List<dynamic> _placeList = [];
+  late Map<String, dynamic> _myDestination;
+
+  final Map<String, dynamic> _myOrigin = {};
 
   @override
   void initState() {
     super.initState();
+
+    final Map<String, dynamic>? args = Get.arguments;
+    if (args != null) {
+      _myDestination = args['_myDestination'] ?? {};
+    } else {
+      _myDestination = {};
+    }
+    debugPrint('#############################');
+    debugPrint('My Destination: $_myDestination');
+    debugPrint('#############################');
+
     _controller.addListener(() {
       _onChanged();
     });
     _getCurrentLocation(); // Fetch current location on page load
   }
 
-  Future<void> _getPlaceDescription(double latitude, double longitude) async {
+  Future<String> _getPlaceDescription(double latitude, double longitude) async {
     try {
       List<Placemark> placemarks =
           await placemarkFromCoordinates(latitude, longitude);
@@ -39,11 +54,14 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
       String placeDescription =
           '${place.locality}, ${place.administrativeArea}';
 
-      // Use the placeDescription as needed in your application
-      print(placeDescription);
       _controller.text = placeDescription;
+
+      // Use the placeDescription as needed in your application
+      debugPrint(placeDescription);
+      return placeDescription;
     } catch (e) {
-      print("Error getting place description: $e");
+      debugPrint("Error getting place description: $e");
+      return ''; // or handle the error in a suitable way
     }
   }
 
@@ -81,7 +99,15 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
       debugPrint(
           "Current Location: ${position.toString()}"); // Print current location
 
-      _getPlaceDescription(position.latitude, position.longitude);
+      String placeDescription =
+          await _getPlaceDescription(position.latitude, position.longitude);
+
+      // Populate _myOrigin here
+      _updateMyOrigin(
+        placeDescription,
+        position.latitude,
+        position.longitude,
+      );
     } catch (e) {
       debugPrint("Error fetching location: ${e.toString()}");
       // Handle other exceptions here
@@ -123,6 +149,59 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
     }
   }
 
+  void _updateMyOrigin(String placeDescription, double lat, double lng) {
+    setState(() {
+      _myOrigin['0'] = {
+        'description': placeDescription,
+        'location': {
+          'lat': lat,
+          'lng': lng,
+        },
+      };
+    });
+  }
+
+  Future<Map<String, double>?> getCoordinates(
+      String placeId, String placeDescription) async {
+    // Replace YOUR_API_KEY with your actual API key
+    const String API_KEY = "AIzaSyD0kPJKSOU4qtXrvddyAZFHeXQY2LMrz_M";
+
+    // Construct the URL for the Geocoding API request
+    String baseURL = 'https://maps.googleapis.com/maps/api/geocode/json';
+    String requestURL = '$baseURL?place_id=$placeId&key=$API_KEY';
+
+    try {
+      // Send the HTTP request
+      var response = await http.get(Uri.parse(requestURL));
+
+      // Check if the request was successful (status code 200)
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        var data = json.decode(response.body);
+
+        // Extract the latitude and longitude from the response
+        double lat = data['results'][0]['geometry']['location']['lat'];
+        double lng = data['results'][0]['geometry']['location']['lng'];
+
+        _updateMyOrigin(placeDescription, lat, lng);
+        setState(() {});
+
+        // Return the latitude and longitude as a map
+        return {
+          'latitude': lat,
+          'longitude': lng,
+        };
+      } else {
+        // If the request was not successful, throw an error
+        throw Exception('Failed to fetch coordinates');
+      }
+    } catch (e) {
+      // If an error occurs during the HTTP request, print the error and return null
+      print(e);
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,15 +239,69 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
               itemCount: _placeList.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     debugPrint(
                         "Selected Item: ${_placeList[index]["description"]}");
+
+                    Map<String, double>? coordinates = await getCoordinates(
+                        _placeList[index]["place_id"],
+                        _placeList[index]["description"]);
+                    if (coordinates != null) {
+                      debugPrint("Latitude: ${coordinates['latitude']}");
+                      debugPrint("Longitude: ${coordinates['longitude']}");
+
+                      debugPrint(json.encode(_myOrigin));
+
+                      // Populate _myOrigin here
+                      _updateMyOrigin(
+                        _placeList[index]["description"],
+                        coordinates['latitude'] as double,
+                        coordinates['longitude'] as double,
+                      );
+                    } else {
+                      debugPrint("Failed to fetch coordinates");
+                    }
                   },
                   child: ListTile(
                     title: Text(_placeList[index]["description"]),
                   ),
                 );
               },
+            ),
+          ),
+          SizedBox(
+            height: 12.0,
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _myDestination.isEmpty
+                  ? null // Disable button if _selectedDestination is empty
+                  : () {
+                      debugPrint('################################');
+                      debugPrint('My Origin: $_myOrigin');
+                      debugPrint('################################');
+
+                      /*Get.to(
+                        () => PlacesOriginScreen(),
+                        // arguments: {'_myDestination': _myDestination},
+                      );*/
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _myOrigin.isEmpty
+                    ? Colors
+                        .grey // Grey background if _selectedDestination is empty
+                    : Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4.0),
+                ),
+              ),
+              child: Text(
+                'Proceed',
+                style: TextStyle(fontSize: 18.0),
+              ),
             ),
           )
         ],
