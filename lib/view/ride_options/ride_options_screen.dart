@@ -62,7 +62,7 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
           polylineId: PolylineId('route_path'),
           points: polylineCoordinates,
           width: 4,
-          color: Color.fromARGB(255, 31, 30, 30),
+          color: const Color.fromARGB(255, 26, 27, 27),
         ));
 
         // Add markers for origin and destination
@@ -103,85 +103,91 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
             margin:
                 EdgeInsets.only(top: MediaQuery.of(context).size.height / 2),
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_myOrigin['0']['description'] as String),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_myDestination['0']['description'] as String),
-                  ],
-                ),
-                const Divider(),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Mini'),
-                    Text('\$1.0/mi'),
-                  ],
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Sedan'),
-                    Text('₹1.25/mi'),
-                  ],
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Luxury'),
-                    Text('₹2.00/mi'),
-                  ],
-                ),
-                const Divider(),
-                const Text('Payment Method'),
-                DropdownButton(
-                  value: 'Cash',
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Cash',
-                      child: Text('Cash'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Card',
-                      child: Text('Card'),
-                    ),
-                  ],
-                  onChanged: (value) {},
-                ),
-                const TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Discount Code',
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Origin - ${_myOrigin['0']['description'].length > 25 ? _myOrigin['0']['description'].substring(0, 25) + '...' : _myOrigin['0']['description']}',
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Origin - ${_myDestination['0']['description'].length > 25 ? _myDestination['0']['description'].substring(0, 25) + '...' : _myDestination['0']['description']}',
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Mini'),
+                      Text('\$1.0/mi'),
+                    ],
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Sedan'),
+                      Text('₹1.25/mi'),
+                    ],
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Luxury'),
+                      Text('₹2.00/mi'),
+                    ],
+                  ),
+                  const Divider(),
+                  const Text('Payment Method'),
+                  DropdownButton(
+                    value: 'Cash',
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Cash',
+                        child: Text('Cash'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Card',
+                        child: Text('Card'),
+                      ),
+                    ],
+                    onChanged: (value) {},
+                  ),
+                  const TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Discount Code',
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 12.0,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                      ),
+                      child: const Text(
+                        'Book Ride',
+                        style: TextStyle(fontSize: 18.0),
                       ),
                     ),
-                    child: const Text(
-                      'Book Ride',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
           ),
         ],
