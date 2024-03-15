@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/ride_options/ride_options_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -283,10 +284,13 @@ class _PlacesOriginScreenState extends State<PlacesOriginScreen> {
                       debugPrint('My Origin: $_myOrigin');
                       debugPrint('################################');
 
-                      /*Get.to(
-                        () => PlacesOriginScreen(),
-                        // arguments: {'_myDestination': _myDestination},
-                      );*/
+                      Get.to(
+                        () => RideOptionsScreen(),
+                        arguments: {
+                          '_myDestination': _myDestination,
+                          '_myOrigin': _myOrigin,
+                        },
+                      );
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _myOrigin.isEmpty
