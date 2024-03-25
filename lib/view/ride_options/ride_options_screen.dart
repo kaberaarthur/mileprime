@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
 
 class RideOptionsScreen extends StatefulWidget {
   const RideOptionsScreen({Key? key}) : super(key: key);
@@ -16,6 +17,11 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
   late final Set<Polyline> _polyline = {};
   late final Set<Marker> _markers = {}; // Add this line to hold markers
 
+  late String _discountCode = ''; // Variable for discount code
+  late String _selectedPaymentMethod =
+      'Cash'; // Variable for selected payment method
+  final TextEditingController _discountController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +33,7 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
       _fetchRoute();
     } else {
       _myDestination = {};
+      _myOrigin = {};
     }
     debugPrint('#############################');
     debugPrint('My Destination: $_myDestination');
@@ -123,28 +130,6 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
                     ],
                   ),
                   const Divider(),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Mini'),
-                      Text('\$1.0/mi'),
-                    ],
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Sedan'),
-                      Text('₹1.25/mi'),
-                    ],
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Luxury'),
-                      Text('₹2.00/mi'),
-                    ],
-                  ),
-                  const Divider(),
                   const Text('Payment Method'),
                   DropdownButton(
                     value: 'Cash',
@@ -154,13 +139,23 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
                         child: Text('Cash'),
                       ),
                       DropdownMenuItem(
-                        value: 'Card',
-                        child: Text('Card'),
+                        value: 'STKPush',
+                        child: Text('STK Push'),
                       ),
                     ],
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPaymentMethod = value!;
+                      });
+                    },
                   ),
-                  const TextField(
+                  TextField(
+                    controller: _discountController,
+                    onChanged: (value) {
+                      setState(() {
+                        _discountCode = value;
+                      });
+                    },
                     decoration: InputDecoration(
                       hintText: 'Discount Code',
                     ),
@@ -172,7 +167,21 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        /*debugPrint("##################");
+                        debugPrint(_discountCode);
+                        debugPrint(_selectedPaymentMethod);
+                        debugPrint("##################");*/
+                        Get.to(
+                          () => CarInfoScreen(),
+                          arguments: {
+                            '_myDestination': _myDestination,
+                            '_myOrigin': _myOrigin,
+                            '_discountCode': _discountCode,
+                            '_selectedPaymentMethod': _selectedPaymentMethod,
+                          },
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         foregroundColor: Colors.white,

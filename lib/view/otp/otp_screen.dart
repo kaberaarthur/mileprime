@@ -262,8 +262,8 @@ class _OtpScreenState extends State<OtpScreen> {
       onChanged: (value) {
         otpController.otp.value = value;
         if (value.length == 5 && value == otp) {
-          /*debugPrint("Length Met and OTP matched with phone number");
-          debugPrintPassword(riderPassword);
+          debugPrint("Length Met and OTP matched with phone number");
+          /*debugPrintPassword(riderPassword);
           debugPrintEmail(riderEmail);*/
           signInWithEmailAndPassword(riderEmail!, riderPassword!);
           Get.to(() => HomeScreen());

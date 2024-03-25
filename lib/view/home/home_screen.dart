@@ -17,6 +17,7 @@ import 'package:prime_taxi_flutter_ui_kit/view/places_destination/places_destina
 import 'package:prime_taxi_flutter_ui_kit/view/my_rides/my_rides_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/payments/payments_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/profile/profile_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/safety/safety_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/save_locations/save_locations_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/settings/settings_screen.dart';
@@ -133,6 +134,8 @@ class HomeScreen extends StatelessWidget {
                 _buildSaveLocations(),
                 const CommonHeightSizedBox(height: AppSize.size24),
                 _buildSafety(),
+                const CommonHeightSizedBox(height: AppSize.size24),
+                _buildCarInfo(),
                 const CommonHeightSizedBox(height: AppSize.size24),
                 _buildSetting(),
                 Padding(
@@ -957,6 +960,44 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  // Car Info Component
+  Padding _buildCarInfo() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
+      child: GestureDetector(
+        onTap: () {
+          Get.to(() => CarInfoScreen());
+        },
+        child: Row(
+          children: [
+            Container(
+              height: AppSize.size24,
+              width: AppSize.size24,
+              decoration: const BoxDecoration(
+                  color: AppColors.lightTheme, shape: BoxShape.circle),
+              child: Center(
+                  child: Image.asset(
+                AppIcons.bookMark,
+                height: AppSize.size14,
+                width: AppSize.size14,
+              )),
+            ),
+            const CommonWidthSizedBox(width: AppSize.size8),
+            const Text(
+              "Car info",
+              style: TextStyle(
+                color: AppColors.blackTextColor,
+                fontFamily: FontFamily.latoSemiBold,
+                fontSize: AppSize.size16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  // Car Info Component
 
   Padding _buildSaveLocations() {
     return Padding(

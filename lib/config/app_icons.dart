@@ -1,4 +1,8 @@
 class AppIcons {
+  static const String mileSuv = "assets/icons/mile-suv.png";
+  static const String mileCar = "assets/icons/mile-car.png";
+  static const String mileLimo = "assets/icons/mile-limo.png";
+  static const String mileLux = "assets/icons/mile-lux.png";
   static const String splashLogo = "assets/icons/splash_logo.png";
   static const String arrowRight = "assets/icons/arrow_right.png";
   static const String arrowBack = "assets/icons/arrow_back.png";
