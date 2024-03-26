@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:prime_taxi_flutter_ui_kit/config/app_icons.dart'; // Import your icon path
 
 class CarInfoScreen extends StatefulWidget {
@@ -13,16 +16,19 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
   late Map<String, dynamic> _myDestination;
   late Map<String, dynamic> _myOrigin;
   late String _discountCode;
+  late String _discountPercent = '';
   late String _selectedPaymentMethod;
+  late Map<String, dynamic> _riderData = {};
+  late dynamic _distanceMatrixData = {};
 
   late String _minutes;
   late String _kilometres;
 
-  late String _standardAmount;
-  late String _comfortAmount;
-  late String _luxuryAmount;
+  late String _standardAmount = '0';
+  late String _comfortAmount = '0';
+  late String _luxuryAmount = '0';
 
-  late String _rideAmount;
+  late String _rideAmount = '0';
 
   String selectedElement = 'Standard';
 
@@ -42,9 +48,11 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         // Convert the decoded response to a JSON string before printing
-        debugPrint("###########################");
+        debugPrint("###########################***");
         debugPrint(jsonEncode(decodedResponse));
-        debugPrint("###########################");
+        debugPrint("###########################***");
+
+        _distanceMatrixData = response.body;
 
         int distanceValue =
             decodedResponse["rows"][0]["elements"][0]["distance"]["value"];
@@ -77,6 +85,12 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
                         .round() *
                     10)
                 .toString();
+
+        debugPrint('******###****** Luxury Amount - $_luxuryAmount');
+        // Set Default Ride Amount
+        _rideAmount = _standardAmount;
+
+        setState(() {});
       } else {
         throw Exception('Failed to load data');
       }
@@ -85,12 +99,141 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
     }
   }
 
+  // Check if Coupon Exists
+  Future<Map<String, dynamic>> checkCouponExists(String couponTitle) async {
+    try {
+      // Get a reference to the Firestore instance
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      // Query for the document with the given couponTitle
+      QuerySnapshot querySnapshot = await firestore
+          .collection('coupons')
+          .where('couponTitle', isEqualTo: couponTitle)
+          .get();
+
+      // If document exists
+      if (querySnapshot.docs.isNotEmpty) {
+        // Get the couponPercent value from the document
+        int couponPercent = querySnapshot.docs.first.get('couponPercent');
+        // Return true and the couponPercent value
+        debugPrint('Coupon Exists');
+        _discountPercent = couponPercent.toString();
+        return {'exists': true, 'couponPercent': couponPercent};
+      } else {
+        // Return false if document does not exist
+        _discountPercent = '';
+        debugPrint('Coupon Does Not Exist');
+        return {'exists': false};
+      }
+    } catch (e) {
+      // Handle errors
+      debugPrint('Error checking coupon existence: $e');
+      // Return false in case of error
+      return {'exists': false};
+    }
+  }
+
+  Future<Map<String, dynamic>> getRiderDocument() async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      FirebaseAuth auth = FirebaseAuth.instance;
+
+      // Get the current user
+      User? user = auth.currentUser;
+
+      if (user != null) {
+        // Initialize riderData as an empty object
+        Map<String, dynamic> riderData = {};
+
+        // Get the document from the 'riders' collection where 'authID' field matches the UID of the current user
+        await firestore
+            .collection('riders')
+            .where('authID', isEqualTo: user.uid)
+            .limit(1)
+            .get()
+            .then((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
+          if (querySnapshot.docs.isNotEmpty) {
+            // If document found, assign the data to riderData object
+            _riderData = querySnapshot.docs.first.data();
+          }
+        });
+
+        return riderData;
+      } else {
+        // If user is not signed in, return null or handle accordingly
+        return {};
+      }
+    } catch (e) {
+      // Handle errors
+      debugPrint('Error fetching rider document: $e');
+      rethrow;
+    }
+  }
+
+  // Create Ride Document
+  Future<void> addRide(String name) async {
+    try {
+      // Get a reference to the Firestore instance
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      // Create a new document reference with an auto-generated ID
+      DocumentReference documentReference = firestore.collection('rides').doc();
+
+      // Get the current timestamp
+      DateTime now = DateTime.now();
+
+      if (_discountPercent != '' && _discountPercent.toString().isNotEmpty) {
+        debugPrint(_discountPercent);
+
+        // Recalculate the _rideAmount
+        double discountPercentAsDouble = double.parse(_discountPercent);
+        double rideAmountAsDouble = double.parse(_rideAmount);
+        double totalDeduction =
+            discountPercentAsDouble / 100 * rideAmountAsDouble;
+        double totalClientPays = rideAmountAsDouble - totalDeduction;
+        double totalBeforeDeduction = rideAmountAsDouble;
+
+        // Run function to add document
+      } else {
+        debugPrint('Discount Percent is Empty');
+
+        double totalDeduction = 0;
+        double totalClientPays = double.parse(_rideAmount);
+        double totalBeforeDeduction = double.parse(_rideAmount);
+
+        // Run function to add document
+        // Set data for the document
+        debugPrint("##**## - $_myDestination");
+        await documentReference.set({
+          'totalDeduction': totalDeduction,
+          'totalClientPays': totalClientPays,
+          'totalBeforeDeduction': totalBeforeDeduction,
+          'name': _riderData['name'],
+          'phone': _riderData['phone'],
+          'dateCreated': Timestamp.fromDate(now),
+          'rideDestination': _myDestination,
+          'rideOrigin': _myOrigin,
+          'rideStatus': "1",
+          'rideLevel': selectedElement,
+          'riderID': _riderData['authID'],
+          'discountSet': false,
+          'couponSet': false,
+          'discountPercent': '',
+          // 'rideTravelInformation': _distanceMatrixData['rows']['0']['elements'],
+        });
+
+        debugPrint('Document added successfully');
+      }
+    } catch (e) {
+      debugPrint('Error adding document: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    // Call your function here or wherever appropriate in your widget lifecycle
-    /* fetchDistanceMatrix(
-        '-1.1177451,37.00892689999999', '-1.2195761,36.88842440000001');*/
+    // Fetch User Data Here
+    getRiderDocument();
 
     final Map<String, dynamic>? args = Get.arguments;
     if (args != null) {
@@ -107,6 +250,10 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
       fetchDistanceMatrix(
           '${_myOrigin['0']!['location']['lat'] as double},${_myOrigin['0']!['location']['lng'] as double}',
           '${_myDestination['0']!['location']['lat'] as double},${_myDestination['0']!['location']['lng'] as double}');
+
+      checkCouponExists(_discountCode);
+
+      setState(() {});
     } else {
       _myDestination = {};
       _myOrigin = {};
@@ -387,6 +534,10 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
                       onPressed: () {
                         // Proceed button action
                         debugPrint("Proceed Button Pressed");
+                        debugPrint('Selected Ride Amount - $_rideAmount');
+                        debugPrint('Rider Data - $_riderData');
+
+                        addRide(_riderData["name"]);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black, // Black background
