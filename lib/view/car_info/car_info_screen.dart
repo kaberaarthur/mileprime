@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_icons.dart'; // Import your icon path
+import 'package:prime_taxi_flutter_ui_kit/config/app_icons.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/ride_in_progress/ride_in_progress_screen.dart';
 
 class CarInfoScreen extends StatefulWidget {
   @override
@@ -52,7 +53,7 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
         debugPrint(jsonEncode(decodedResponse));
         debugPrint("###########################***");
 
-        _distanceMatrixData = response.body;
+        _distanceMatrixData = decodedResponse["rows"][0]["elements"][0];
 
         int distanceValue =
             decodedResponse["rows"][0]["elements"][0]["distance"]["value"];
@@ -189,11 +190,56 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
         double discountPercentAsDouble = double.parse(_discountPercent);
         double rideAmountAsDouble = double.parse(_rideAmount);
         double totalDeduction =
-            discountPercentAsDouble / 100 * rideAmountAsDouble;
+            ((discountPercentAsDouble / 100 * rideAmountAsDouble) / 10)
+                    .round() *
+                10;
         double totalClientPays = rideAmountAsDouble - totalDeduction;
         double totalBeforeDeduction = rideAmountAsDouble;
 
         // Run function to add document
+        // Set data for the document
+        debugPrint("##**## - $_distanceMatrixData");
+        await documentReference.set({
+          'totalDeduction': totalDeduction,
+          'totalClientPays': totalClientPays,
+          'totalBeforeDeduction': totalBeforeDeduction,
+          'name': _riderData['name'],
+          'phone': _riderData['phone'],
+          'dateCreated': Timestamp.fromDate(now),
+          'rideDestination': _myDestination,
+          'rideOrigin': _myOrigin,
+          'rideStatus': "1",
+          'rideLevel': selectedElement,
+          'riderID': _riderData['authID'],
+          'discountSet': true,
+          'couponSet': false,
+          'discountPercent': discountPercentAsDouble,
+          'rideTravelInformation': _distanceMatrixData,
+          'driverId': '',
+          'driverAuthID': '',
+          'driverName': '',
+          'driverPhone': '',
+          'driverProfile': '',
+          'driverRating': ''
+        });
+
+        // Retrieve document ID
+        String docId = documentReference.id;
+
+        // Print document ID
+        debugPrint('Document added successfully with ID: $docId');
+
+        // Get to Next Page
+        Get.to(
+          () => RideInProgressScreen(),
+          arguments: {
+            '_myDestination': _myDestination,
+            '_myOrigin': _myOrigin,
+            '_discountCode': _discountCode,
+            '_selectedPaymentMethod': _selectedPaymentMethod,
+            '_rideDocumentId': docId,
+          },
+        );
       } else {
         debugPrint('Discount Percent is Empty');
 
@@ -203,7 +249,7 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
 
         // Run function to add document
         // Set data for the document
-        debugPrint("##**## - $_myDestination");
+        debugPrint("##**## - $_distanceMatrixData");
         await documentReference.set({
           'totalDeduction': totalDeduction,
           'totalClientPays': totalClientPays,
@@ -219,10 +265,25 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
           'discountSet': false,
           'couponSet': false,
           'discountPercent': '',
-          // 'rideTravelInformation': _distanceMatrixData['rows']['0']['elements'],
+          'rideTravelInformation': _distanceMatrixData,
         });
 
+        // Retrieve document ID
+        String docId = documentReference.id;
+
         debugPrint('Document added successfully');
+
+        // Get to Next Page
+        Get.to(
+          () => RideInProgressScreen(),
+          arguments: {
+            '_myDestination': _myDestination,
+            '_myOrigin': _myOrigin,
+            '_discountCode': _discountCode,
+            '_selectedPaymentMethod': _selectedPaymentMethod,
+            '_rideDocumentId': docId,
+          },
+        );
       }
     } catch (e) {
       debugPrint('Error adding document: $e');

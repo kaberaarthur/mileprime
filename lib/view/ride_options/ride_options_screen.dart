@@ -125,7 +125,7 @@ class _RideOptionsScreenState extends State<RideOptionsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Origin - ${_myDestination['0']['description'].length > 25 ? _myDestination['0']['description'].substring(0, 25) + '...' : _myDestination['0']['description']}',
+                        'Destination - ${_myDestination['0']['description'].length > 25 ? _myDestination['0']['description'].substring(0, 25) + '...' : _myDestination['0']['description']}',
                       ),
                     ],
                   ),

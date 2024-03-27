@@ -1,1108 +1,415 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:prime_taxi_flutter_ui_kit/common_widgets/common_height_sized_box.dart';
-import 'package:prime_taxi_flutter_ui_kit/common_widgets/common_width_sized_box.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_colors.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_icons.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_images.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_size.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/app_strings.dart';
-import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
-import 'package:prime_taxi_flutter_ui_kit/controllers/home_controller.dart';
-import 'package:prime_taxi_flutter_ui_kit/controllers/language_controller.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/destination/destination_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/places_destination/places_destination_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/my_rides/my_rides_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/payments/payments_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/profile/profile_screen.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/safety/safety_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/save_locations/save_locations_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/settings/settings_screen.dart';
-import 'package:prime_taxi_flutter_ui_kit/view/widget/logout_bottom_sheet.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
-import '../../common_widgets/common_text_feild.dart';
+class RideInProgressScreen extends StatefulWidget {
+  const RideInProgressScreen({Key? key}) : super(key: key);
 
-class RideInProgressScreen extends StatelessWidget {
-  RideInProgressScreen({super.key});
+  @override
+  State<RideInProgressScreen> createState() => _RideInProgressScreenState();
+}
 
-  final HomeController homeController = Get.put(HomeController());
-  final LanguageController languageController = Get.put(LanguageController());
+class _RideInProgressScreenState extends State<RideInProgressScreen> {
+  late Map<String, dynamic> _myDestination;
+  late Map<String, dynamic> _myOrigin;
+  late final Set<Polyline> _polyline = {};
+  late final Set<Marker> _markers = {}; // Add this line to hold markers
+
+  late String _discountCode = ''; // Variable for discount code
+  late String _rideDocumentId = '';
+  late Map<String, dynamic> _newRideData = {};
+  late String _currentRideStatus = '1';
+  late String _selectedPaymentMethod =
+      'Cash'; // Variable for selected payment method
+  final TextEditingController _discountController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final Map<String, dynamic>? args = Get.arguments;
+    if (args != null) {
+      _myDestination = args['_myDestination'] ?? {};
+      _myOrigin = args['_myOrigin'] ?? {};
+      _rideDocumentId = args['_rideDocumentId'] ?? '';
+      _fetchRoute();
+    } else {
+      _myDestination = {};
+      _myOrigin = {};
+      _rideDocumentId = '';
+    }
+    debugPrint('#############################');
+    debugPrint('My Destination: $_myDestination');
+    debugPrint('My Origin: $_myOrigin');
+    debugPrint('#############################');
+  }
+
+  // Monitor Ride Status
+  void monitorRideStatus(String _rideDocumentId) {
+    FirebaseFirestore.instance
+        .collection('rides')
+        .doc(_rideDocumentId)
+        .snapshots()
+        .listen((DocumentSnapshot snapshot) {
+      if (snapshot.exists) {
+        var rideStatus = snapshot.data()
+            as Map<String, dynamic>?; // Cast to Map<String, dynamic>
+        if (rideStatus != null) {
+          var rideStatusValue =
+              rideStatus['rideStatus']; // Now, you can safely use []
+          // debugPrint('Ride Status: $rideStatusValue');
+          _currentRideStatus = rideStatusValue;
+          _newRideData = snapshot.data() as Map<String, dynamic>;
+          setState(() {});
+        } else {
+          debugPrint('Document data is null or not a map');
+        }
+      } else {
+        debugPrint('Document does not exist');
+      }
+    });
+  }
+
+  void _fetchRoute() async {
+    PolylinePoints polylinePoints = PolylinePoints();
+
+    double originLat = _myOrigin['0']['location']['lat'] as double;
+    double originLng = _myOrigin['0']['location']['lng'] as double;
+    double destinationLat = _myDestination['0']['location']['lat'] as double;
+    double destinationLng = _myDestination['0']['location']['lng'] as double;
+
+    PointLatLng originPoint = PointLatLng(originLat, originLng);
+    PointLatLng destinationPoint = PointLatLng(destinationLat, destinationLng);
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      'AIzaSyD0kPJKSOU4qtXrvddyAZFHeXQY2LMrz_M', // Replace with your API key
+      originPoint,
+      destinationPoint,
+      travelMode: TravelMode.driving,
+    );
+
+    if (result.points.isNotEmpty) {
+      List<LatLng> polylineCoordinates = result.points
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+
+      setState(() {
+        _polyline.add(Polyline(
+          polylineId: PolylineId('route_path'),
+          points: polylineCoordinates,
+          width: 4,
+          color: const Color.fromARGB(255, 26, 27, 27),
+        ));
+
+        // Add markers for origin and destination
+        _markers.add(Marker(
+          markerId: MarkerId('origin'),
+          position: LatLng(originLat, originLng),
+          infoWindow: InfoWindow(title: 'Origin'),
+        ));
+        _markers.add(Marker(
+          markerId: MarkerId('destination'),
+          position: LatLng(destinationLat, destinationLng),
+          infoWindow: InfoWindow(title: 'Destination'),
+        ));
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    languageController.loadSelectedLanguage();
-    return Center(
-      child: Container(
-        color: AppColors.backGroundColor,
-        width: kIsWeb ? AppSize.size800 : null,
-        child: Scaffold(
-          drawer: Drawer(
-            shape: const RoundedRectangleBorder(),
-            width: AppSize.size250,
-            backgroundColor: AppColors.backGroundColor,
-            child: Column(
-              children: [
-                Align(
-                    alignment: Alignment.topRight,
-                    child: Container(
-                      height: AppSize.size73,
-                      width: AppSize.size76,
-                      decoration: const BoxDecoration(
-                          image: DecorationImage(
-                        image: AssetImage(
-                          AppImages.menuBarImage,
-                        ),
-                        fit: BoxFit.fill,
-                      )),
-                    )),
-                const CommonHeightSizedBox(height: AppSize.size12),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSize.size20),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.borderColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.shadow,
-                            blurRadius: AppSize.size66,
-                            spreadRadius: AppSize.size0,
-                          )
-                        ],
-                        color: AppColors.backGroundColor,
-                        borderRadius: BorderRadius.circular(AppSize.size10)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSize.size12),
-                      child: Row(
-                        children: [
-                          Container(
-                            height: AppSize.size40,
-                            width: AppSize.size40,
-                            decoration: BoxDecoration(
-                                color: AppColors.borderColor,
-                                shape: BoxShape.circle),
-                            child: const Center(
-                              child: Text(
-                                AppStrings.ar,
-                                style: TextStyle(
-                                  color: AppColors.blackTextColor,
-                                  fontFamily: FontFamily.latoBold,
-                                  fontSize: AppSize.size14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const CommonWidthSizedBox(width: AppSize.size10),
-                          const Column(
-                            children: [
-                              Text(
-                                AppStrings.helloAlbert,
-                                style: TextStyle(
-                                  color: AppColors.blackTextColor,
-                                  fontFamily: FontFamily.latoBold,
-                                  fontSize: AppSize.size16,
-                                ),
-                              ),
-                              CommonHeightSizedBox(height: AppSize.size6),
-                              Text(
-                                AppStrings.demoMobile,
-                                style: TextStyle(
-                                  color: AppColors.smallTextColor,
-                                  fontFamily: FontFamily.latoRegular,
-                                  fontSize: AppSize.size12,
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+    monitorRideStatus(_rideDocumentId);
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height / 2,
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(
+                  _myOrigin['0']['location']['lat'] as double,
+                  _myOrigin['0']['location']['lng'] as double,
                 ),
-                const CommonHeightSizedBox(height: AppSize.size34),
-                _buildProfile(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildMyRides(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildPayments(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildSaveLocations(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildSafety(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildCarInfo(),
-                const CommonHeightSizedBox(height: AppSize.size24),
-                _buildSetting(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: AppSize.size32, vertical: AppSize.size40),
-                  child: Divider(
-                    height: AppSize.size0,
-                    color: AppColors.dividerColor,
-                    thickness: AppSize.size1,
-                  ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSize.size32),
-                  child: GestureDetector(
-                    onTap: () {
-                      logoutBottomSheet(context);
-                    },
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          AppIcons.logOut,
-                          height: AppSize.size16,
-                          width: AppSize.size16,
-                        ),
-                        const CommonWidthSizedBox(width: AppSize.size6),
-                        const Text(
-                          AppStrings.logOut,
-                          style: TextStyle(
-                            color: AppColors.redColor,
-                            fontFamily: FontFamily.latoSemiBold,
-                            fontSize: AppSize.size16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              ],
+                zoom: 15,
+              ),
+              polylines: _polyline,
+              markers: _markers, // Add markers here
             ),
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: AppColors.backGroundColor,
-                        child: Obx(
-                          () => GoogleMap(
-                            myLocationEnabled: false,
-                            myLocationButtonEnabled: true,
-                            zoomControlsEnabled: false,
-                            initialCameraPosition: const CameraPosition(
-                              target:
-                                  LatLng(AppSize.latitude, AppSize.longitude),
-                              zoom: AppSize.size14,
-                            ),
-                            mapType: MapType.normal,
-                            markers: Set.from(homeController.markers),
-                            onMapCreated: (controller) {
-                              homeController.gMapsFunctionCall(
-                                  homeController.initialLocation);
-                            },
-                          ),
-                        )),
-                    Padding(
-                      padding: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top,
-                          right: AppSize.size20,
-                          left: AppSize.size20),
-                      child: Row(
-                        children: [
-                          Padding(
-                              padding:
-                                  const EdgeInsets.only(top: AppSize.size12),
-                              child: Builder(
-                                builder: (BuildContext builderContext) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Scaffold.of(builderContext).openDrawer();
-                                    },
+          SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: Container(
+              margin:
+                  EdgeInsets.only(top: MediaQuery.of(context).size.height / 2),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Origin - ${_myOrigin['0']['description'].length > 25 ? _myOrigin['0']['description'].substring(0, 25) + '...' : _myOrigin['0']['description']}',
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Destination - ${_myDestination['0']['description'].length > 25 ? _myDestination['0']['description'].substring(0, 25) + '...' : _myDestination['0']['description']}',
+                      ),
+                    ],
+                  ),
+
+                  const Divider(),
+                  const SizedBox(
+                    height: 12.0,
+                  ),
+
+                  /**/
+                  Text(
+                    _rideDocumentId,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+
+                  Text(
+                    "Driver arriving in 4 Minutes",
+                    style: const TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+
+                  SizedBox(height: 5),
+                  /**/
+
+                  /*
+                  Text(
+                    _currentRideStatus,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  */
+
+                  // Locating Driver
+                  Center(
+                      child: _currentRideStatus == '1'
+                          ? Container(
+                              height: 100, // Adjust height as needed
+                              color: Color.fromARGB(255, 255, 200, 47),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal:
+                                      20.0), // Adjust horizontal padding as needed
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal:
+                                            10.0), // Adjust horizontal padding as needed
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color.fromARGB(255, 0, 0, 0),
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Locating driver',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(
+                              constraints: BoxConstraints(
+                                minHeight: 180, // Minimum height
+                              ),
+                              color: const Color.fromARGB(255, 241, 240, 240),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
                                     child: Container(
-                                      height: AppSize.size46,
-                                      width: AppSize.size46,
-                                      decoration: BoxDecoration(
-                                          color: AppColors.backGroundColor,
-                                          borderRadius: BorderRadius.circular(
-                                              AppSize.size10),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.shadow,
-                                              blurRadius: AppSize.size66,
-                                              spreadRadius: AppSize.size0,
-                                            )
-                                          ]),
-                                      child: Center(
-                                          child: Image.asset(
-                                        AppIcons.drawerIcon,
-                                        height: AppSize.size20,
-                                        width: AppSize.size20,
-                                      )),
-                                    ),
-                                  );
-                                },
-                              )),
-                          const CommonWidthSizedBox(
-                            width: AppSize.size12,
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(top: AppSize.size12),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      spreadRadius: AppSize.opacity10,
-                                      color: AppColors.blackTextColor
-                                          .withOpacity(AppSize.opacity10),
-                                      blurRadius: AppSize.size20,
-                                    ),
-                                  ],
-                                ),
-                                child: CustomTextField(
-                                  controller:
-                                      homeController.userLocationController,
-                                  hintText: AppStrings.enterLocation,
-                                  hintFontSize: AppSize.size12,
-                                  hintColor: AppColors.smallTextColor,
-                                  hintTextColor: AppColors.smallTextColor,
-                                  fontFamily: FontFamily.latoRegular,
-                                  height: AppSize.size46,
-                                  fillColor: AppColors.backGroundColor,
-                                  cursorColor: AppColors.smallTextColor,
-                                  fillFontFamily: FontFamily.latoSemiBold,
-                                  fillFontWeight: FontWeight.w400,
-                                  fillFontSize: AppSize.size12,
-                                  fontWeight: FontWeight.w400,
-                                  fillTextColor: AppColors.blackTextColor,
-                                  suffixIcon: Obx(
-                                    () => Padding(
-                                      padding: EdgeInsets.only(
-                                          right: languageController.arb.value
-                                              ? AppSize.size7
-                                              : AppSize.size16,
-                                          left: languageController.arb.value
-                                              ? AppSize.size16
-                                              : AppSize.size7),
-                                      child: Obx(
-                                        () => homeController.like.value
-                                            ? GestureDetector(
-                                                onTap: () {
-                                                  homeController.like.value =
-                                                      false;
-                                                },
-                                                child: Image.asset(
-                                                  AppIcons.likeFill,
-                                                  height: AppSize.size18,
-                                                  width: AppSize.size18,
-                                                  color: AppColors.redColor,
-                                                ),
-                                              )
-                                            : GestureDetector(
-                                                onTap: () {
-                                                  homeController.like.value =
-                                                      true;
-                                                },
-                                                child: Image.asset(
-                                                  AppIcons.like,
-                                                  height: AppSize.size18,
-                                                  width: AppSize.size18,
-                                                ),
-                                              ),
+                                      alignment: Alignment.center,
+                                      child: const CircleAvatar(
+                                        radius:
+                                            30, // Adjust the radius as needed
+                                        backgroundColor: Color.fromARGB(
+                                            255, 255, 216, 44), // Example color
+                                        // You can replace the backgroundImage with your profile picture
+                                        backgroundImage: NetworkImage(
+                                            'https://firebasestorage.googleapis.com/v0/b/mile-cab-app.appspot.com/o/documents%2Fdriver-profile-pictures%2F%2B254708394567-1707012373423-nid.jpeg?alt=media&token=a4908068-c712-4a35-916d-ab28ab705c56'),
                                       ),
                                     ),
                                   ),
-                                  suffixIconConstraints: const BoxConstraints(
-                                    maxWidth: AppSize.size38,
-                                  ),
-                                  prefixIcon: Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: AppSize.size12,
-                                      right: AppSize.size8,
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'King Kaka',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          SizedBox(height: 5),
+                                          Text(
+                                            '+254703557082',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          SizedBox(height: 5),
+                                          Text(
+                                            'White, Honda Fit',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          SizedBox(height: 5),
+                                          Text(
+                                            'KCM 354S',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          /*SizedBox(height: 5),
+                                          Row(
+                                            children: [
+                                              Icon(Icons.star,
+                                                  color: Color.fromARGB(
+                                                      255, 255, 216, 44)),
+                                              SizedBox(width: 5),
+                                              Text(
+                                                '4.5', // Example star rating
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),*/
+                                          SizedBox(
+                                              height:
+                                                  10), // Add space between star rating and button
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              debugPrint("Phone No. Copied");
+                                              await Clipboard.setData(
+                                                  ClipboardData(
+                                                      text: '+254703557082'));
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                      'Phone No. Copied to Clipboard'),
+                                                  backgroundColor:
+                                                      Colors.green[600],
+                                                ),
+                                              );
+                                            },
+                                            child: Text('Copy Number'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.yellow[600],
+                                              foregroundColor: Colors.black,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                              height:
+                                                  6), // Add space between star rating and button
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              debugPrint("Call Driver");
+
+                                              final url = Uri.parse(
+                                                  'tel:+254703557082');
+                                              launchUrl(url);
+                                            },
+                                            child: Text('Message Driver'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 0, 0, 0),
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    child: Image.asset(
-                                      AppIcons.mapIcon,
-                                      height: AppSize.size18,
-                                      width: AppSize.size18,
-                                    ),
                                   ),
-                                  prefixIconConstraints: const BoxConstraints(
-                                    maxWidth: AppSize.size36,
-                                  ),
-                                  contentPadding: const EdgeInsets.only(
-                                      left: AppSize.size16,
-                                      top: AppSize.size10,
-                                      bottom: AppSize.size10),
-                                ),
+                                ],
                               ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        homeController.onTapDirection();
+                            )),
+
+                  // Locating Driver
+                  const SizedBox(
+                    height: 12.0,
+                  ),
+                  /*
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        /*debugPrint("##################");
+                        debugPrint(_discountCode);
+                        debugPrint(_selectedPaymentMethod);
+                        debugPrint("##################");*/
+                        Get.to(
+                          () => CarInfoScreen(),
+                          arguments: {
+                            '_myDestination': _myDestination,
+                            '_myOrigin': _myOrigin,
+                            '_discountCode': _discountCode,
+                            '_selectedPaymentMethod': _selectedPaymentMethod,
+                          },
+                        );
                       },
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            right: AppSize.size20,
-                            bottom: AppSize.size20,
-                          ),
-                          child: Image.asset(
-                            AppIcons.gpsIcon,
-                            width: AppSize.size38,
-                          ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.0),
                         ),
                       ),
+                      child: const Text(
+                        'Book Ride',
+                        style: TextStyle(fontSize: 18.0),
+                      ),
                     ),
-                  ],
-                ),
+                  )*/
+                ],
               ),
-              Obx(() => GestureDetector(
-                    onVerticalDragUpdate: (details) {
-                      homeController.updateHeight(details.primaryDelta!);
-                    },
-                    behavior: HitTestBehavior.translucent,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: AppSize.time200),
-                      height: homeController.height.value,
-                      padding: const EdgeInsets.only(
-                        top: AppSize.size10,
-                        left: AppSize.size20,
-                        right: AppSize.size20,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppSize.size10),
-                          topRight: Radius.circular(AppSize.size10),
-                        ),
-                        color: AppColors.backGroundColor,
-                        boxShadow: [
-                          BoxShadow(
-                            spreadRadius: AppSize.size1,
-                            blurRadius: AppSize.size17,
-                            color: Colors.grey.shade400,
-                          ),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        /*physics: homeController.height.value == AppSize.size130
-                            ? const NeverScrollableScrollPhysics()
-                            : const ClampingScrollPhysics(),*/
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              AppIcons.bottomSheetIcon,
-                              width: AppSize.size40,
-                            ),
-                            /*Obx(
-                              () => languageController.arb.value
-                                  ? Container(
-                                      height: AppSize.size82,
-                                      margin: const EdgeInsets.only(
-                                        top: AppSize.size24,
-                                      ),
-                                      padding: EdgeInsets.only(
-                                          left: languageController.arb.value
-                                              ? 0
-                                              : AppSize.size15,
-                                          right: languageController.arb.value
-                                              ? AppSize.size15
-                                              : 0),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.backGroundColor,
-                                        border: Border.all(
-                                          color: AppColors.smallTextColor
-                                              .withOpacity(AppSize.opacity10),
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                            AppSize.size10),
-                                      ),
-                                      child: GridView.builder(
-                                        shrinkWrap: true,
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: AppSize.four,
-                                          mainAxisExtent: AppSize.size64,
-                                          crossAxisSpacing: AppSize.size15,
-                                        ),
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        padding: const EdgeInsets.only(
-                                          top: AppSize.size15,
-                                        ),
-                                        itemCount:
-                                            homeController.serviceString.length,
-                                        itemBuilder: (context, index) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              homeController
-                                                  .setServiceIndex(index);
-                                            },
-                                            child: Obx(() => SizedBox(
-                                                  width: AppSize.size30,
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          Image.asset(
-                                                            homeController
-                                                                    .serviceIcon[
-                                                                index],
-                                                            width:
-                                                                AppSize.size30,
-                                                          ),
-                                                          Text(
-                                                            homeController
-                                                                    .serviceString[
-                                                                index],
-                                                            style: TextStyle(
-                                                              fontSize: AppSize
-                                                                  .size12,
-                                                              fontFamily:
-                                                                  FontFamily
-                                                                      .latoRegular,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              color: homeController
-                                                                          .selectedServiceIndex
-                                                                          .value ==
-                                                                      index
-                                                                  ? AppColors
-                                                                      .blackTextColor
-                                                                  : AppColors
-                                                                      .smallTextColor,
-                                                            ),
-                                                          ),
-                                                          if (homeController
-                                                                  .selectedServiceIndex
-                                                                  .value ==
-                                                              index) ...[
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                top: AppSize
-                                                                    .size5,
-                                                              ),
-                                                              child:
-                                                                  Image.asset(
-                                                                AppIcons
-                                                                    .selectLineIcon,
-                                                                width: AppSize
-                                                                    .size30,
-                                                              ),
-                                                            ),
-                                                          ] else
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                top: AppSize
-                                                                    .size5,
-                                                              ),
-                                                              child:
-                                                                  Image.asset(
-                                                                AppIcons
-                                                                    .selectLineIcon,
-                                                                width: AppSize
-                                                                    .size30,
-                                                                color: AppColors
-                                                                    .backGroundColor,
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : Container(
-                                      height: AppSize.size82,
-                                      margin: const EdgeInsets.only(
-                                        top: AppSize.size24,
-                                      ),
-                                      padding: EdgeInsets.only(
-                                          left: languageController.arb.value
-                                              ? 0
-                                              : AppSize.size15,
-                                          right: languageController.arb.value
-                                              ? AppSize.size15
-                                              : 0),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.backGroundColor,
-                                        border: Border.all(
-                                          color: AppColors.smallTextColor
-                                              .withOpacity(AppSize.opacity10),
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                            AppSize.size10),
-                                      ),
-                                      child: GridView.builder(
-                                        shrinkWrap: true,
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: AppSize.four,
-                                          mainAxisExtent: AppSize.size64,
-                                          crossAxisSpacing: AppSize.size15,
-                                        ),
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        padding: const EdgeInsets.only(
-                                          top: AppSize.size15,
-                                        ),
-                                        itemCount:
-                                            homeController.serviceString.length,
-                                        itemBuilder: (context, index) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              homeController
-                                                  .setServiceIndex(index);
-                                            },
-                                            child: Obx(() => SizedBox(
-                                                  width: AppSize.size30,
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          Image.asset(
-                                                            homeController
-                                                                    .serviceIcon[
-                                                                index],
-                                                            width:
-                                                                AppSize.size30,
-                                                          ),
-                                                          Text(
-                                                            homeController
-                                                                    .serviceString[
-                                                                index],
-                                                            style: TextStyle(
-                                                              fontSize: AppSize
-                                                                  .size12,
-                                                              fontFamily:
-                                                                  FontFamily
-                                                                      .latoRegular,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              color: homeController
-                                                                          .selectedServiceIndex
-                                                                          .value ==
-                                                                      index
-                                                                  ? AppColors
-                                                                      .blackTextColor
-                                                                  : AppColors
-                                                                      .smallTextColor,
-                                                            ),
-                                                          ),
-                                                          if (homeController
-                                                                  .selectedServiceIndex
-                                                                  .value ==
-                                                              index) ...[
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                top: AppSize
-                                                                    .size5,
-                                                              ),
-                                                              child:
-                                                                  Image.asset(
-                                                                AppIcons
-                                                                    .selectLineIcon,
-                                                                width: AppSize
-                                                                    .size30,
-                                                              ),
-                                                            ),
-                                                          ] else
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                top: AppSize
-                                                                    .size5,
-                                                              ),
-                                                              child:
-                                                                  Image.asset(
-                                                                AppIcons
-                                                                    .selectLineIcon,
-                                                                width: AppSize
-                                                                    .size30,
-                                                                color: AppColors
-                                                                    .backGroundColor,
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                            ),*/
-                            Container(
-                              height: AppSize.size238,
-                              margin: const EdgeInsets.only(
-                                top: AppSize.size16,
-                              ),
-                              padding: const EdgeInsets.only(
-                                left: AppSize.size15,
-                                right: AppSize.size15,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.backGroundColor,
-                                border: Border.all(
-                                  color: AppColors.smallTextColor
-                                      .withOpacity(AppSize.opacity10),
-                                ),
-                                borderRadius:
-                                    BorderRadius.circular(AppSize.size10),
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Get.to(() => DestinationScreen());
-                                },
-                                child: Column(
-                                  children: [
-                                    SizedBox(
-                                      height: AppSize.size42,
-                                      child: TextField(
-                                        decoration: InputDecoration(
-                                          hintText: AppStrings.setOrigin,
-                                          hintStyle: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: FontFamily.latoSemiBold,
-                                            color: AppColors.blackTextColor,
-                                            fontSize: AppSize.size14,
-                                          ),
-                                          border: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.smallTextColor
-                                                  .withOpacity(
-                                                      AppSize.opacity20),
-                                              width: AppSize.size1,
-                                            ),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.smallTextColor
-                                                  .withOpacity(
-                                                      AppSize.opacity20),
-                                              width: AppSize.size1,
-                                            ),
-                                          ),
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.smallTextColor
-                                                  .withOpacity(
-                                                      AppSize.opacity20),
-                                              width: AppSize.size1,
-                                            ),
-                                          ),
-                                          prefixIcon: Obx(
-                                            () => Padding(
-                                              padding: EdgeInsets.only(
-                                                right:
-                                                    languageController.arb.value
-                                                        ? 0
-                                                        : AppSize.size8,
-                                                left:
-                                                    languageController.arb.value
-                                                        ? AppSize.size8
-                                                        : 0,
-                                                top: AppSize.size5,
-                                              ),
-                                              child: Image.asset(
-                                                AppIcons.search,
-                                              ),
-                                            ),
-                                          ),
-                                          prefixIconConstraints:
-                                              const BoxConstraints(
-                                            maxWidth: AppSize.size22,
-                                          ),
-                                        ),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: FontFamily.latoSemiBold,
-                                          color: AppColors.blackTextColor,
-                                          fontSize: AppSize.size14,
-                                        ),
-                                        cursorColor: const Color.fromARGB(
-                                            255, 177, 168, 168),
-                                        // readOnly: true,
-                                        onTap: () {
-                                          Get.to(
-                                              () => PlacesDestinationScreen());
-                                          debugPrint(
-                                              "Clicked Select Destination");
-                                        },
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          top: AppSize.size12,
-                                          bottom: AppSize.size12,
-                                        ),
-                                        child: ListView.separated(
-                                          padding: EdgeInsets.zero,
-                                          shrinkWrap: true,
-                                          physics:
-                                              const BouncingScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            return Row(
-                                              children: [
-                                                Obx(
-                                                  () => Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right:
-                                                            languageController
-                                                                    .arb.value
-                                                                ? 0
-                                                                : AppSize.size6,
-                                                        left: languageController
-                                                                .arb.value
-                                                            ? AppSize.size6
-                                                            : AppSize.size0),
-                                                    child: Image.asset(
-                                                      AppIcons.mapIcon,
-                                                      color: AppColors
-                                                          .smallTextColor,
-                                                      width: AppSize.size14,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Text(
-                                                    homeController
-                                                        .locationString[index],
-                                                    maxLines: AppSize.one,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      fontSize: AppSize.size12,
-                                                      fontFamily: FontFamily
-                                                          .latoRegular,
-                                                      color: AppColors
-                                                          .blackTextColor,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                          separatorBuilder: (context, index) {
-                                            return Divider(
-                                              color: AppColors.smallTextColor
-                                                  .withOpacity(
-                                                      AppSize.opacity10),
-                                              height: AppSize.size25,
-                                            );
-                                          },
-                                          itemCount: homeController
-                                              .locationString.length,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Padding _buildProfile() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => ProfileScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.user,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.profile,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Padding _buildMyRides() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => MyRidesScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.scooter,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.myRides,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Padding _buildPayments() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => PaymentsScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.payment,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.payment,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Car Info Component
-  Padding _buildCarInfo() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => CarInfoScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.bookMark,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              "Car info",
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  // Car Info Component
-
-  Padding _buildSaveLocations() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => SaveLocationsScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.bookMark,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.saveLocations,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Padding _buildSafety() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => SafetyScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.verify,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.safety,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Padding _buildSetting() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
-      child: GestureDetector(
-        onTap: () {
-          Get.to(() => SettingsScreen());
-        },
-        child: Row(
-          children: [
-            Container(
-              height: AppSize.size24,
-              width: AppSize.size24,
-              decoration: const BoxDecoration(
-                  color: AppColors.lightTheme, shape: BoxShape.circle),
-              child: Center(
-                  child: Image.asset(
-                AppIcons.settings,
-                height: AppSize.size14,
-                width: AppSize.size14,
-              )),
-            ),
-            const CommonWidthSizedBox(width: AppSize.size8),
-            const Text(
-              AppStrings.settings,
-              style: TextStyle(
-                color: AppColors.blackTextColor,
-                fontFamily: FontFamily.latoSemiBold,
-                fontSize: AppSize.size16,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
