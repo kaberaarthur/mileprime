@@ -1,11 +1,18 @@
+// ignore_for_file: unrelated_type_equality_checks
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/messages/messages_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/rating_screen/rating_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:prime_taxi_flutter_ui_kit/config/font_family.dart';
+
+import 'dart:async';
 
 class RideInProgressScreen extends StatefulWidget {
   const RideInProgressScreen({Key? key}) : super(key: key);
@@ -28,6 +35,8 @@ class _RideInProgressScreenState extends State<RideInProgressScreen> {
       'Cash'; // Variable for selected payment method
   final TextEditingController _discountController = TextEditingController();
 
+  late bool rideStatusFour = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,9 +58,18 @@ class _RideInProgressScreenState extends State<RideInProgressScreen> {
     debugPrint('#############################');
   }
 
+  void checkRideStatus(String currentRideStatus) {
+    if (currentRideStatus == '4') {
+      debugPrint('Ride status is equal to 4');
+    } else {
+      debugPrint('Ride status is not equal to 4');
+    }
+  }
+
   // Monitor Ride Status
   void monitorRideStatus(String _rideDocumentId) {
-    FirebaseFirestore.instance
+    StreamSubscription<DocumentSnapshot>? subscription;
+    subscription = FirebaseFirestore.instance
         .collection('rides')
         .doc(_rideDocumentId)
         .snapshots()
@@ -62,7 +80,9 @@ class _RideInProgressScreenState extends State<RideInProgressScreen> {
         if (rideStatus != null) {
           var rideStatusValue =
               rideStatus['rideStatus']; // Now, you can safely use []
-          // debugPrint('Ride Status: $rideStatusValue');
+
+          checkRideStatus(rideStatusValue);
+
           _currentRideStatus = rideStatusValue;
           _newRideData = snapshot.data() as Map<String, dynamic>;
           setState(() {});
@@ -125,286 +145,370 @@ class _RideInProgressScreenState extends State<RideInProgressScreen> {
   Widget build(BuildContext context) {
     monitorRideStatus(_rideDocumentId);
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          Container(
-            height: MediaQuery.of(context).size.height / 2,
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                  _myOrigin['0']['location']['lat'] as double,
-                  _myOrigin['0']['location']['lng'] as double,
+          Expanded(
+            child: Container(
+              // height: MediaQuery.of(context).size.height / 2,
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                    _myOrigin['0']['location']['lat'] as double,
+                    _myOrigin['0']['location']['lng'] as double,
+                  ),
+                  zoom: 15,
                 ),
-                zoom: 15,
+                polylines: _polyline,
+                markers: _markers, // Add markers here
               ),
-              polylines: _polyline,
-              markers: _markers, // Add markers here
             ),
           ),
-          SingleChildScrollView(
-            physics: NeverScrollableScrollPhysics(),
+          Expanded(
             child: Container(
-              margin:
-                  EdgeInsets.only(top: MediaQuery.of(context).size.height / 2),
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+              color: Color.fromARGB(255, 255, 254, 252),
+              child: ListView(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Origin - ${_myOrigin['0']['description'].length > 25 ? _myOrigin['0']['description'].substring(0, 25) + '...' : _myOrigin['0']['description']}',
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Origin - ${_myOrigin['0']['description'].length > 20 ? _myOrigin['0']['description'].substring(0, 20) + '...' : _myOrigin['0']['description']}',
+                              style: TextStyle(
+                                fontSize: 14, // Adjust the font size as needed
+                                color:
+                                    Colors.black, // Change the font color here
+                                decoration: TextDecoration.none,
+                                fontFamily: FontFamily.latoRegular,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Destination - ${_myDestination['0']['description'].length > 20 ? _myDestination['0']['description'].substring(0, 20) + '...' : _myDestination['0']['description']}',
+                              style: TextStyle(
+                                fontSize: 14, // Adjust the font size as needed
+                                color:
+                                    Colors.black, // Change the font color here
+                                decoration: TextDecoration.none,
+                                fontFamily: FontFamily.latoRegular,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const Divider(),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+
+                        /**/
+                        Text(
+                          _rideDocumentId,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.black, // Change the font color here
+                            decoration: TextDecoration.none,
+                            fontFamily: FontFamily.latoRegular,
+                          ),
+                        ),
+
+                        Text(
+                          "Driver arriving in 4 Minutes",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.black, // Change the font color here
+                            decoration: TextDecoration.none,
+                            fontFamily: FontFamily.latoRegular,
+                          ),
+                        ),
+
+                        SizedBox(height: 5),
+                        /**/
+
+                        /*
+                    Text(
+                      _currentRideStatus,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Destination - ${_myDestination['0']['description'].length > 25 ? _myDestination['0']['description'].substring(0, 25) + '...' : _myDestination['0']['description']}',
-                      ),
-                    ],
-                  ),
-
-                  const Divider(),
-                  const SizedBox(
-                    height: 12.0,
-                  ),
-
-                  /**/
-                  Text(
-                    _rideDocumentId,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
-                  ),
+                    */
 
-                  Text(
-                    "Driver arriving in 4 Minutes",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-
-                  SizedBox(height: 5),
-                  /**/
-
-                  /*
-                  Text(
-                    _currentRideStatus,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                  */
-
-                  // Locating Driver
-                  Center(
-                      child: _currentRideStatus == '1'
-                          ? Container(
-                              height: 100, // Adjust height as needed
-                              color: Color.fromARGB(255, 255, 200, 47),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal:
-                                      20.0), // Adjust horizontal padding as needed
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
+                        // Locating Driver
+                        Center(
+                            child: _currentRideStatus == '1'
+                                ? Container(
+                                    height: 100, // Adjust height as needed
+                                    color: Color.fromARGB(255, 255, 200, 47),
+                                    padding: const EdgeInsets.symmetric(
                                         horizontal:
-                                            10.0), // Adjust horizontal padding as needed
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color.fromARGB(255, 0, 0, 0),
-                                      ),
+                                            20.0), // Adjust horizontal padding as needed
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal:
+                                                  10.0), // Adjust horizontal padding as needed
+                                          child: CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Color.fromARGB(255, 0, 0, 0),
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Locating driver',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            color: Colors
+                                                .black, // Change the font color here
+                                            decoration: TextDecoration.none,
+                                            fontFamily: FontFamily.latoRegular,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  Text(
-                                    'Locating driver',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
+                                  )
+                                : Container(
+                                    constraints: BoxConstraints(
+                                      minHeight: 180, // Minimum height
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Container(
-                              constraints: BoxConstraints(
-                                minHeight: 180, // Minimum height
-                              ),
-                              color: const Color.fromARGB(255, 241, 240, 240),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Container(
-                                      alignment: Alignment.center,
-                                      child: const CircleAvatar(
-                                        radius:
-                                            30, // Adjust the radius as needed
-                                        backgroundColor: Color.fromARGB(
-                                            255, 255, 216, 44), // Example color
-                                        // You can replace the backgroundImage with your profile picture
-                                        backgroundImage: NetworkImage(
-                                            'https://firebasestorage.googleapis.com/v0/b/mile-cab-app.appspot.com/o/documents%2Fdriver-profile-pictures%2F%2B254708394567-1707012373423-nid.jpeg?alt=media&token=a4908068-c712-4a35-916d-ab28ab705c56'),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'King Kaka',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
+                                    color: const Color.fromARGB(
+                                        255, 241, 240, 240),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 1,
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: const CircleAvatar(
+                                              radius:
+                                                  30, // Adjust the radius as needed
+                                              backgroundColor: Color.fromARGB(
+                                                  255,
+                                                  255,
+                                                  216,
+                                                  44), // Example color
+                                              // You can replace the backgroundImage with your profile picture
+                                              backgroundImage: NetworkImage(
+                                                  'https://firebasestorage.googleapis.com/v0/b/mile-cab-app.appspot.com/o/documents%2Fdriver-profile-pictures%2F%2B254708394567-1707012373423-nid.jpeg?alt=media&token=a4908068-c712-4a35-916d-ab28ab705c56'),
                                             ),
                                           ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            '+254703557082',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            'White, Honda Fit',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            'KCM 354S',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          /*SizedBox(height: 5),
-                                          Row(
-                                            children: [
-                                              Icon(Icons.star,
-                                                  color: Color.fromARGB(
-                                                      255, 255, 216, 44)),
-                                              SizedBox(width: 5),
-                                              Text(
-                                                '4.5', // Example star rating
-                                                style: TextStyle(
-                                                  fontSize: 16,
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'King Kaka',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
+                                                    color: Colors
+                                                        .black, // Change the font color here
+                                                    decoration:
+                                                        TextDecoration.none,
+                                                    fontFamily:
+                                                        FontFamily.latoRegular,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),*/
-                                          SizedBox(
-                                              height:
-                                                  10), // Add space between star rating and button
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              debugPrint("Phone No. Copied");
-                                              await Clipboard.setData(
-                                                  ClipboardData(
-                                                      text: '+254703557082'));
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                      'Phone No. Copied to Clipboard'),
-                                                  backgroundColor:
-                                                      Colors.green[600],
+                                                SizedBox(height: 5),
+                                                Text(
+                                                  '+254703557082',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors
+                                                        .black, // Change the font color here
+                                                    decoration:
+                                                        TextDecoration.none,
+                                                    fontFamily:
+                                                        FontFamily.latoRegular,
+                                                  ),
                                                 ),
-                                              );
-                                            },
-                                            child: Text('Copy Number'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.yellow[600],
-                                              foregroundColor: Colors.black,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                              height:
-                                                  6), // Add space between star rating and button
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              debugPrint("Call Driver");
+                                                SizedBox(height: 5),
+                                                Text(
+                                                  'White, Honda Fit',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors
+                                                        .black, // Change the font color here
+                                                    decoration:
+                                                        TextDecoration.none,
+                                                    fontFamily:
+                                                        FontFamily.latoRegular,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 5),
+                                                Text(
+                                                  'KCM 354S',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors
+                                                        .black, // Change the font color here
+                                                    decoration:
+                                                        TextDecoration.none,
+                                                    fontFamily:
+                                                        FontFamily.latoRegular,
+                                                  ),
+                                                ),
+                                                /*SizedBox(height: 5),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.star,
+                                                    color: Color.fromARGB(
+                                                        255, 255, 216, 44)),
+                                                SizedBox(width: 5),
+                                                Text(
+                                                  '4.5', // Example star rating
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),*/
+                                                SizedBox(
+                                                    height:
+                                                        10), // Add space between star rating and button
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    debugPrint(
+                                                        "Phone No. Copied");
+                                                    await Clipboard.setData(
+                                                        const ClipboardData(
+                                                            text:
+                                                                '+254703557082'));
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: const Text(
+                                                            'Phone No. Copied to Clipboard'),
+                                                        backgroundColor:
+                                                            Colors.green[600],
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Text('Copy Number'),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.yellow[600],
+                                                    foregroundColor:
+                                                        Colors.black,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              4),
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                    height:
+                                                        6), // Add space between star rating and button
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    debugPrint(
+                                                        "Message Driver");
 
-                                              final url = Uri.parse(
-                                                  'tel:+254703557082');
-                                              launchUrl(url);
-                                            },
-                                            child: Text('Message Driver'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color.fromARGB(
-                                                      255, 0, 0, 0),
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
+                                                    // Get to Messages Screen
+                                                    Get.to(
+                                                      () => MessagesScreen(),
+                                                      arguments: {
+                                                        '_myDestination':
+                                                            _myDestination,
+                                                        '_myOrigin': _myOrigin,
+                                                        '_discountCode':
+                                                            _discountCode,
+                                                        '_selectedPaymentMethod':
+                                                            _selectedPaymentMethod,
+                                                        '_rideDocumentId':
+                                                            _rideDocumentId,
+                                                      },
+                                                    );
+                                                  },
+                                                  child: Text('Message Driver'),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color.fromARGB(
+                                                            255, 0, 0, 0),
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              4),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )),
+                                  )),
 
-                  // Locating Driver
-                  const SizedBox(
-                    height: 12.0,
-                  ),
-                  /*
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        /*debugPrint("##################");
-                        debugPrint(_discountCode);
-                        debugPrint(_selectedPaymentMethod);
-                        debugPrint("##################");*/
-                        Get.to(
-                          () => CarInfoScreen(),
-                          arguments: {
-                            '_myDestination': _myDestination,
-                            '_myOrigin': _myOrigin,
-                            '_discountCode': _discountCode,
-                            '_selectedPaymentMethod': _selectedPaymentMethod,
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.0),
+                        // Locating Driver
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        /*
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          /*debugPrint("##################");
+                          debugPrint(_discountCode);
+                          debugPrint(_selectedPaymentMethod);
+                          debugPrint("##################");*/
+                          Get.to(
+                            () => CarInfoScreen(),
+                            arguments: {
+                              '_myDestination': _myDestination,
+                              '_myOrigin': _myOrigin,
+                              '_discountCode': _discountCode,
+                              '_selectedPaymentMethod': _selectedPaymentMethod,
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                        child: const Text(
+                          'Book Ride',
+                          style: TextStyle(fontSize: 18.0),
                         ),
                       ),
-                      child: const Text(
-                        'Book Ride',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
+                    )*/
+                      ],
                     ),
-                  )*/
+                  ),
                 ],
               ),
             ),

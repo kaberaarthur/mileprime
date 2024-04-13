@@ -19,7 +19,7 @@
     </queries>
     <application
 
-        android:label="Prime Taxi Booking"
+        android:label="Mile Taxi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"

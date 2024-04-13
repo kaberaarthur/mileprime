@@ -21,6 +21,7 @@ import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/safety/safety_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/save_locations/save_locations_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/settings/settings_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/split_screen/split_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/widget/logout_bottom_sheet.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -126,6 +127,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const CommonHeightSizedBox(height: AppSize.size34),
                 _buildProfile(),
+                const CommonHeightSizedBox(height: AppSize.size34),
+                _buildSplit(),
                 const CommonHeightSizedBox(height: AppSize.size24),
                 _buildMyRides(),
                 const CommonHeightSizedBox(height: AppSize.size24),
@@ -877,6 +880,42 @@ class HomeScreen extends StatelessWidget {
             const CommonWidthSizedBox(width: AppSize.size8),
             const Text(
               AppStrings.profile,
+              style: TextStyle(
+                color: AppColors.blackTextColor,
+                fontFamily: FontFamily.latoSemiBold,
+                fontSize: AppSize.size16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Padding _buildSplit() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
+      child: GestureDetector(
+        onTap: () {
+          Get.to(() => SplitScreen());
+        },
+        child: Row(
+          children: [
+            Container(
+              height: AppSize.size24,
+              width: AppSize.size24,
+              decoration: const BoxDecoration(
+                  color: AppColors.lightTheme, shape: BoxShape.circle),
+              child: Center(
+                  child: Image.asset(
+                AppIcons.user,
+                height: AppSize.size14,
+                width: AppSize.size14,
+              )),
+            ),
+            const CommonWidthSizedBox(width: AppSize.size8),
+            const Text(
+              'Split Screen',
               style: TextStyle(
                 color: AppColors.blackTextColor,
                 fontFamily: FontFamily.latoSemiBold,
