@@ -27,11 +27,38 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../common_widgets/common_text_feild.dart';
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  HomeScreen({Key? key}) : super(key: key);
 
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final HomeController homeController = Get.put(HomeController());
   final LanguageController languageController = Get.put(LanguageController());
+
+  String? riderEmail;
+  String? riderPhone;
+  String? riderName;
+
+  @override
+  void initState() {
+    super.initState();
+    final Map<String, dynamic>? args = Get.arguments;
+    if (args != null) {
+      riderPhone = args['phoneNumber'] ?? '';
+      riderEmail = args['riderEmail'] ?? '';
+      riderName = args['riderName'] ?? '';
+    } else {
+      riderPhone = '';
+      riderEmail = '';
+      riderName = '';
+    }
+    debugPrint('Phone Number: $riderPhone');
+    debugPrint('Email: $riderEmail');
+    debugPrint('Email: $riderName');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +126,10 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                           const CommonWidthSizedBox(width: AppSize.size10),
-                          const Column(
+                          Column(
                             children: [
                               Text(
-                                AppStrings.helloAlbert,
+                                'Hello, $riderName',
                                 style: TextStyle(
                                   color: AppColors.blackTextColor,
                                   fontFamily: FontFamily.latoBold,

@@ -33,6 +33,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   String? riderEmail;
   String? riderPassword;
+  String? riderName;
 
   void debugPrintEmail(String? email) {
     if (email != null) {
@@ -53,12 +54,27 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> signInWithEmailAndPassword(
       String riderEmail, String riderPassword) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: riderEmail,
         password: riderPassword,
       );
-      debugPrint('Sign in successful');
-      // You can add any additional logic here after successful sign-in
+      final user = userCredential.user;
+      if (user != null) {
+        debugPrint('Sign in successful. User UID: ${user.uid}');
+        debugPrint('Sign in successful. User UID: ${user.uid}');
+        debugPrint('Sign in successful. User UID: ${user.uid}');
+        // You can add any additional logic here after successful sign-in
+
+        Get.to(() => HomeScreen(), arguments: {
+          'phoneNumber': phoneNumber,
+          'riderEmail': riderEmail,
+          'riderName': riderName,
+        });
+      } else {
+        debugPrint('Error: User is null');
+        // Handle the case where the user is null
+      }
     } catch (e) {
       debugPrint('Error signing in: $e');
       // Handle error here
@@ -100,6 +116,7 @@ class _OtpScreenState extends State<OtpScreen> {
         if (data != null && data.containsKey('email')) {
           debugPrint('Rider email: ${data['email']}');
           riderEmail = data['email'] as String;
+          riderName = data['name'] as String;
         } else {
           debugPrint('Email not found in rider document');
         }
@@ -266,7 +283,6 @@ class _OtpScreenState extends State<OtpScreen> {
           /*debugPrintPassword(riderPassword);
           debugPrintEmail(riderEmail);*/
           signInWithEmailAndPassword(riderEmail!, riderPassword!);
-          Get.to(() => HomeScreen());
         }
       },
     );
