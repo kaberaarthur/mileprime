@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? riderEmail;
   String? riderPhone;
   String? riderName;
+  String? riderNameCut;
 
   @override
   void initState() {
@@ -49,7 +50,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (args != null) {
       riderPhone = args['phoneNumber'] ?? '';
       riderEmail = args['riderEmail'] ?? '';
-      riderName = args['riderName'] ?? '';
+      String fullName = args['riderName'] ?? '';
+
+      // Formatting the riderName as directed
+      if (fullName.isNotEmpty) {
+        List<String> nameParts = fullName.split(' ');
+        if (nameParts.length > 0) {
+          String firstName = nameParts[0];
+          riderNameCut = firstName.length > 20
+              ? '${firstName.substring(0, 20)}...'
+              : firstName;
+        }
+      }
     } else {
       riderPhone = '';
       riderEmail = '';
@@ -129,8 +141,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Column(
                             children: [
                               Text(
-                                'Hello, $riderName',
-                                style: TextStyle(
+                                'Hello, $riderNameCut',
+                                style: const TextStyle(
                                   color: AppColors.blackTextColor,
                                   fontFamily: FontFamily.latoBold,
                                   fontSize: AppSize.size16,
@@ -138,8 +150,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               CommonHeightSizedBox(height: AppSize.size6),
                               Text(
-                                AppStrings.demoMobile,
-                                style: TextStyle(
+                                riderPhone!,
+                                style: const TextStyle(
                                   color: AppColors.smallTextColor,
                                   fontFamily: FontFamily.latoRegular,
                                   fontSize: AppSize.size12,
