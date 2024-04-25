@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:prime_taxi_flutter_ui_kit/controllers/language_controller.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/safety_details/safety_details_screen.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_icons.dart';
@@ -120,8 +121,7 @@ class SafetyScreen extends StatelessWidget {
                     height: AppSize.size0,
                   ),
                 ),
-                _customContact(
-                    AppIcons.messageSupport, AppStrings.messageSupport),
+                _customContact(AppIcons.messageSupport, "Talk to Support"),
                 Padding(
                   padding: const EdgeInsets.only(
                       top: AppSize.size18, bottom: AppSize.size24),
@@ -140,39 +140,46 @@ class SafetyScreen extends StatelessWidget {
   }
 
   _customContact(String image, String text) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Obx(
-              () => Padding(
-                padding: EdgeInsets.only(
-                    right: languageController.arb.value ? 0 : AppSize.size8,
-                    left: languageController.arb.value
-                        ? AppSize.size8
-                        : AppSize.size0),
-                child: Image.asset(
-                  image,
-                  width: AppSize.size20,
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the desired screen here
+        // For example, to navigate to SafetyDetailsScreen:
+        Get.to(SafetyDetailsScreen());
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Obx(
+                () => Padding(
+                  padding: EdgeInsets.only(
+                      right: languageController.arb.value ? 0 : AppSize.size8,
+                      left: languageController.arb.value
+                          ? AppSize.size8
+                          : AppSize.size0),
+                  child: Image.asset(
+                    image,
+                    width: AppSize.size20,
+                  ),
                 ),
               ),
-            ),
-            Text(
-              text,
-              style: const TextStyle(
-                  fontSize: AppSize.size14,
-                  fontFamily: FontFamily.latoSemiBold,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.blackTextColor),
-            ),
-          ],
-        ),
-        Image.asset(
-          AppIcons.rightArrowIcon,
-          width: AppSize.size16,
-        ),
-      ],
+              Text(
+                text,
+                style: const TextStyle(
+                    fontSize: AppSize.size14,
+                    fontFamily: FontFamily.latoSemiBold,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.blackTextColor),
+              ),
+            ],
+          ),
+          Image.asset(
+            AppIcons.rightArrowIcon,
+            width: AppSize.size16,
+          ),
+        ],
+      ),
     );
   }
 }

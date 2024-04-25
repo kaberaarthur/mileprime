@@ -21,6 +21,7 @@ import 'package:prime_taxi_flutter_ui_kit/view/car_info/car_info_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/safety/safety_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/save_locations/save_locations_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/settings/settings_screen.dart';
+import 'package:prime_taxi_flutter_ui_kit/view/view_profile/view_profile_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/split_screen/split_screen.dart';
 import 'package:prime_taxi_flutter_ui_kit/view/widget/logout_bottom_sheet.dart';
 import 'package:geolocator/geolocator.dart';
@@ -180,6 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildCarInfo(),
                 const CommonHeightSizedBox(height: AppSize.size24),
                 _buildSetting(),
+                const CommonHeightSizedBox(height: AppSize.size24),
+                _buildViewProfile(),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppSize.size32, vertical: AppSize.size40),
@@ -900,7 +903,14 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
       child: GestureDetector(
         onTap: () {
-          Get.to(() => ProfileScreen());
+          Get.to(
+            () => ProfileScreen(),
+            arguments: {
+              'riderName': riderNameCut,
+              'riderPhone': riderPhone,
+              'riderEmail': riderEmail
+            },
+          );
         },
         child: Row(
           children: [
@@ -1173,6 +1183,42 @@ class _HomeScreenState extends State<HomeScreen> {
             const CommonWidthSizedBox(width: AppSize.size8),
             const Text(
               AppStrings.settings,
+              style: TextStyle(
+                color: AppColors.blackTextColor,
+                fontFamily: FontFamily.latoSemiBold,
+                fontSize: AppSize.size16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Padding _buildViewProfile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSize.size32),
+      child: GestureDetector(
+        onTap: () {
+          Get.to(() => ViewProfilePage());
+        },
+        child: Row(
+          children: [
+            Container(
+              height: AppSize.size24,
+              width: AppSize.size24,
+              decoration: const BoxDecoration(
+                  color: AppColors.lightTheme, shape: BoxShape.circle),
+              child: Center(
+                  child: Image.asset(
+                AppIcons.settings,
+                height: AppSize.size14,
+                width: AppSize.size14,
+              )),
+            ),
+            const CommonWidthSizedBox(width: AppSize.size8),
+            const Text(
+              "Edit Profile",
               style: TextStyle(
                 color: AppColors.blackTextColor,
                 fontFamily: FontFamily.latoSemiBold,

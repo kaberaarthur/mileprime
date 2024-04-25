@@ -14,6 +14,7 @@ class AppStrings {
   static const String ar = "AR";
   static const String helloAlbert = "Hello, Albert";
   static const String demoMobile = "+91 00000 00000";
+  static const String demoMobileKenya = "+254 701 000 000";
   static const String service = "2. Service";
   static const String terms3 = "3. Terms";
   static const String profile = "Profile";

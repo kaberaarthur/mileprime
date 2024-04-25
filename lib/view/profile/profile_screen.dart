@@ -15,11 +15,41 @@ import '../../config/app_size.dart';
 import '../../config/app_strings.dart';
 import '../../config/font_family.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   ProfileScreen({Key? key}) : super(key: key);
 
-  ProfileController profileController = Get.put(ProfileController());
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late ProfileController profileController;
   final LanguageController languageController = Get.put(LanguageController());
+
+  late String riderName = '';
+  late String riderEmail = '';
+  late String riderPhone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    profileController = Get.put(ProfileController());
+
+    final Map<String, dynamic>? args = Get.arguments;
+    if (args != null) {
+      riderEmail = args['riderEmail'] ?? {};
+      riderPhone = args['riderPhone'] ?? {};
+      riderName = args['riderName'] ?? '';
+    } else {
+      riderName = '';
+      riderPhone = '';
+      riderEmail = '';
+    }
+    debugPrint('#############################');
+    debugPrint('Rider Name: $riderName');
+    debugPrint('Rider Phone: $riderPhone');
+    debugPrint('#############################');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,12 +131,23 @@ class ProfileScreen extends StatelessWidget {
                     child: Obx(
                       () => CircleAvatar(
                         radius: AppSize.size39,
-                        backgroundColor: AppColors.backGroundColor,
-                        backgroundImage: profileController.imagePath.isNotEmpty
-                            ? Image.file(
-                                    File(profileController.imagePath.value))
-                                .image
-                            : Image.asset(AppIcons.profilePic).image,
+                        backgroundColor: riderName != null &&
+                                riderName.isNotEmpty
+                            ? Color.fromARGB(255, 255, 215,
+                                35) // Use yellow background color if riderName is not null or empty
+                            : Color.fromARGB(255, 255, 215,
+                                35), // Use black background color if riderName is null or empty
+                        child: Text(
+                          riderName != null && riderName.isNotEmpty
+                              ? riderName[0]
+                                  .toUpperCase() // Use the capitalized first letter of riderName if not null or empty
+                              : 'U', // Use 'U' if riderName is null or empty
+                          style: TextStyle(
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                            fontSize: 40,
+                            fontFamily: FontFamily.latoBold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -122,6 +163,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
+          /*
           Container(
             decoration: BoxDecoration(
               boxShadow: [
@@ -135,7 +177,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: CustomTextField(
               controller: profileController.nameController,
-              hintText: AppStrings.name,
+              hintText: riderName,
               hintFontSize: AppSize.size14,
               hintColor: AppColors.smallTextColor,
               hintTextColor: AppColors.smallTextColor,
@@ -154,7 +196,61 @@ class ProfileScreen extends StatelessWidget {
                   top: AppSize.size18,
                   bottom: AppSize.size18),
             ),
+          ),*/
+          // Name
+          Padding(
+            padding: const EdgeInsets.only(top: AppSize.size24),
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    spreadRadius: AppSize.opacity10,
+                    color:
+                        AppColors.blackTextColor.withOpacity(AppSize.opacity10),
+                    blurRadius: AppSize.size20,
+                  ),
+                ],
+              ),
+              child: CustomTextField(
+                controller: profileController.emailController,
+                hintText: riderName,
+                hintFontSize: AppSize.size14,
+                hintColor: AppColors.smallTextColor,
+                hintTextColor: AppColors.smallTextColor,
+                fontFamily: FontFamily.latoRegular,
+                height: AppSize.size54,
+                fillColor: AppColors.backGroundColor,
+                cursorColor: AppColors.smallTextColor,
+                fillFontFamily: FontFamily.latoSemiBold,
+                fillFontWeight: FontWeight.w600,
+                fillFontSize: AppSize.size14,
+                fontWeight: FontWeight.w400,
+                fillTextColor: AppColors.blackTextColor,
+                suffixIcon: Obx(
+                  () => Padding(
+                    padding: EdgeInsets.only(
+                        right:
+                            languageController.arb.value ? 0 : AppSize.size16,
+                        left: languageController.arb.value
+                            ? AppSize.size16
+                            : AppSize.size0),
+                    child: Image.asset(
+                      AppIcons.emailIcon,
+                    ),
+                  ),
+                ),
+                suffixIconConstraints: const BoxConstraints(
+                  maxWidth: AppSize.size30,
+                ),
+                contentPadding: const EdgeInsets.only(
+                    left: AppSize.size16,
+                    right: AppSize.size16,
+                    top: AppSize.size18,
+                    bottom: AppSize.size18),
+              ),
+            ),
           ),
+          // Phone Number
           Padding(
             padding: const EdgeInsets.only(top: AppSize.size24),
             child: Container(
@@ -209,7 +305,7 @@ class ProfileScreen extends StatelessWidget {
                                     width: AppSize.size19,
                                     child: profileController.countryCode
                                             ?.flagImage() ??
-                                        Image.asset(AppIcons.india)),
+                                        Image.asset(AppIcons.kenya)),
                                 const CommonWidthSizedBox(width: AppSize.size4),
                                 SizedBox(
                                     height: AppSize.size12,
@@ -229,7 +325,7 @@ class ProfileScreen extends StatelessWidget {
                                     width: AppSize.size10),
                                 Text(
                                     profileController.countryCode?.dialCode ??
-                                        AppStrings.indiaCode,
+                                        AppStrings.kenyaCode,
                                     style:
                                         const TextStyle(color: Colors.black)),
                               ],
@@ -245,7 +341,7 @@ class ProfileScreen extends StatelessWidget {
                                     width: AppSize.size19,
                                     child: profileController.countryCode
                                             ?.flagImage() ??
-                                        Image.asset(AppIcons.india)),
+                                        Image.asset(AppIcons.kenya)),
                                 const CommonWidthSizedBox(width: AppSize.size4),
                                 SizedBox(
                                     height: AppSize.size12,
@@ -316,7 +412,8 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: CustomTextField(
                 controller: profileController.birthController,
-                hintText: AppStrings.birthOfDate,
+                // hintText: AppStrings.birthOfDate,
+                hintText: 'Date of Birth',
                 hintFontSize: AppSize.size14,
                 hintColor: AppColors.smallTextColor,
                 hintTextColor: AppColors.smallTextColor,
@@ -358,6 +455,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
+          /*
           Padding(
             padding: const EdgeInsets.only(top: AppSize.size24),
             child: Container(
@@ -403,12 +501,14 @@ class ProfileScreen extends StatelessWidget {
                   maxWidth: AppSize.size30,
                 ),
                 contentPadding: const EdgeInsets.only(
-                    left: AppSize.size16,right: AppSize.size16,
+                    left: AppSize.size16,
+                    right: AppSize.size16,
                     top: AppSize.size18,
                     bottom: AppSize.size18),
               ),
             ),
           ),
+          */
           const Padding(
             padding:
                 EdgeInsets.only(top: AppSize.size24, bottom: AppSize.size10),

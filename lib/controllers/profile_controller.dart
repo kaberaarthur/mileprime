@@ -11,8 +11,10 @@ import '../config/app_size.dart';
 import '../config/font_family.dart';
 
 class ProfileController extends GetxController {
-  TextEditingController nameController = TextEditingController(text: AppStrings.albertRadhe);
-  TextEditingController mobileController = TextEditingController(text: AppStrings.mobileNumber);
+  TextEditingController nameController =
+      TextEditingController(text: AppStrings.albertRadhe);
+  TextEditingController mobileController =
+      TextEditingController(text: AppStrings.mobileNumber);
   TextEditingController birthController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   final countryTextController = TextEditingController();
@@ -88,8 +90,7 @@ class ProfileController extends GetxController {
 
     if (picked != null && picked != selectedDate) {
       selectedDate.value = picked;
-      birthController.text =
-      "${picked.toLocal()}".split(' ')[0];
+      birthController.text = "${picked.toLocal()}".split(' ')[0];
     }
   }
 
